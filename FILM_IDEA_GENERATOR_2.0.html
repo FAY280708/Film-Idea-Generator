@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Film Idea Generator: Film & Scene Idea Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #121212;
+            --secondary-dark: #1a1a1a;
+            --tertiary-dark: #242424;
+            --accent-gold: #DAA520;
+            --accent-red: #8B0000;
+            --text-light: #f0f0f0;
+            --text-dark: #111111;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+            background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png');
+        }
+
+        /* --- Opening Animation --- */
+        #opening-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--primary-dark);
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 1s ease-in-out;
+        }
+        #opening-animation.fade-out { opacity: 0; pointer-events: none; }
+        .anim-text {
+            font-size: 2rem; font-weight: bold; color: var(--accent-gold);
+            opacity: 0; animation: fadeInOut 3s ease-in-out forwards;
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+
+        /* --- Main App --- */
+        .main-app { display: none; }
+
+        .plus-button {
+            position: fixed; bottom: 2rem; right: 2rem; width: 4rem; height: 4rem;
+            border-radius: 50%; background-color: var(--accent-red); color: var(--text-light);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2rem; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 50;
+        }
+        .plus-button:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 6px 20px rgba(218, 165, 32, 0.4); }
+        .plus-button.project-view { background-color: var(--accent-gold); }
+        .plus-menu-btn {
+            background-color: var(--secondary-dark); color: var(--text-light);
+            padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+            border: 1px solid var(--accent-gold); font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .plus-menu-btn:hover { background-color: var(--accent-gold); color: var(--primary-dark); }
+
+
+        /* --- Modals --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 60;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: var(--secondary-dark); padding: 2rem; border-radius: 0.5rem;
+            border: 2px solid var(--accent-gold); width: 90%; max-width: 600px;
+            background-image: url('https://www.transparenttextures.com/patterns/inspiration-geometry.png');
+        }
+        
+        /* --- Project View --- */
+        #projects-view {
+            background-color: var(--secondary-dark); /* Added background color */
+            min-height: 100vh; /* Ensure it covers the full height */
+            background-image: url('https://www.transparenttextures.com/patterns/dark-matter.png'); /* Added background image */
+        }
+        .project-card {
+            background-color: var(--tertiary-dark); border: 1px solid var(--accent-red);
+            transition: all 0.3s ease;
+            background-image: url('https://www.transparenttextures.com/patterns/checkered-pattern.png');
+        }
+        .project-card:hover { border-color: var(--accent-gold); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        
+        /* --- Editor View --- */
+        #editor-view { background-image: url('https://www.transparenttextures.com/patterns/inspiration-geometry.png'); }
+        .editor-toolbar { background-color: var(--secondary-dark); border-bottom: 2px solid var(--accent-gold); }
+        .toolbar-btn, .toolbar-select, .toolbar-color {
+            background-color: var(--tertiary-dark); color: var(--text-light); border: 1px solid var(--accent-gold);
+            padding: 0.5rem; border-radius: 0.25rem;
+        }
+        #writing-area {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            background-color: #ffffff; color: var(--text-dark); border: 1px solid var(--accent-gold);
+            min-height: 400px; outline: none;
+        }
+        
+        /* --- Idea Cards --- */
+        .idea-card {
+            background-color: var(--tertiary-dark); border: 1px solid var(--accent-gold);
+            background-image: url('https://www.transparenttextures.com/patterns/subtle-stripes.png');
+        }
+        .idea-action-btn {
+             background-color: var(--secondary-dark); color: var(--text-light); padding: 0.25rem 0.75rem;
+             border: 1px solid var(--accent-gold); border-radius: 0.25rem; font-size: 0.875rem;
+             transition: all 0.2s ease;
+        }
+        .idea-action-btn:hover { background-color: var(--accent-gold); color: var(--primary-dark); }
+        
+        /* Custom Dropdown */
+        .dropdown-wrapper { position: relative; }
+        .dropdown-input {
+            width: 100%; background-color: #333; color: white;
+            border: 1px solid var(--accent-gold); padding: 0.625rem; border-radius: 0.375rem;
+        }
+        .dropdown-content {
+            display: none; position: absolute; background-color: #242424;
+            border: 1px solid var(--accent-gold); width: 100%; z-index: 70;
+            max-height: 150px; overflow-y: auto;
+        }
+        .dropdown-content a { color: white; padding: 8px 12px; text-decoration: none; display: block; cursor: pointer; }
+        .dropdown-content a:hover { background-color: #4a4a4a; }
+    </style>
+</head>
+<body>
+
+    <div id="opening-animation">
+        <p class="anim-text">Developed by Faruk Arda Yegenoglu</p>
+    </div>
+
+    <div id="app-container" class="main-app">
+        
+        <div id="projects-view">
+            <header class="text-center p-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-white" style="text-shadow: 2px 2px 4px var(--accent-red);">Film Idea Generator</h1>
+            </header>
+            <main id="projects-list" class="container mx-auto p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+        </div>
+
+        <div id="editor-view" class="hidden min-h-screen p-4 md:p-8">
+            <header class="flex justify-between items-center mb-6">
+                <button id="back-to-projects" class="py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                <h2 id="project-title-display" class="text-3xl font-bold text-center text-white" style="text-shadow: 2px 2px 4px var(--accent-gold);"></h2>
+                <div></div>
+            </header>
+            
+            <div class="bg-black bg-opacity-50 p-6 rounded-lg border-2 border-gray-700">
+                <div id="editor-toolbar" class="editor-toolbar p-2 rounded-t-lg flex items-center gap-2 md:gap-4 flex-wrap">
+                    <button class="toolbar-btn" data-command="bold"><i class="fas fa-bold"></i></button>
+                    <button class="toolbar-btn" data-command="italic"><i class="fas fa-italic"></i></button>
+                    <button class="toolbar-btn" data-command="underline"><i class="fas fa-underline"></i></button>
+                    <select class="toolbar-select" data-command="fontSize">
+                        <option value="3">Normal</option><option value="5">Large</option><option value="7">Heading</option>
+                    </select>
+                    <input type="color" class="toolbar-color w-10 h-10" data-command="foreColor" value="#000000">
+                    <button id="copy-all-btn" class="ml-auto py-1 px-3 bg-blue-600 hover:bg-blue-500 rounded"><i class="fas fa-copy mr-2"></i>Copy Text</button>
+                </div>
+                <div id="writing-area" contenteditable="true" class="p-4 rounded-b-lg"></div>
+            </div>
+
+            <div id="ideas-container" class="mt-8"></div>
+            <footer class="text-center mt-8 py-4">
+                <p class="text-gray-500 text-sm">Developed by Faruk Arda Yegenoglu</p>
+            </footer>
+        </div>
+
+        <div id="plus-button" class="plus-button"><i class="fas fa-plus"></i></div>
+        <div id="plus-menu" class="hidden" style="position: fixed; bottom: 7rem; right: 2rem; z-index: 50;">
+             <div class="flex flex-col gap-3">
+                <button class="plus-menu-btn" data-action="film">Create Film Idea</button>
+                <button class="plus-menu-btn" data-action="scene">Create Scene Idea</button>
+             </div>
+        </div>
+    </div>
+
+    <div id="modal-container"></div>
+    
+    <script type="module">
+        const filmOptions = {
+            genre: ['Action', 'Superhero', 'Spy', 'Espionage', 'Martial Arts', 'Heist', 'Adventure', 'Quest', 'Survival', 'Exploration', 'Jungle', 'Space', 'Deep Sea', 'Comedy', 'Romantic Comedy', 'Dark Comedy', 'Slapstick', 'Satire', 'Parody', 'Drama', 'Historical Drama', 'Crime Drama', 'Family Drama', 'Legal Drama', 'Courtroom', 'Fantasy', 'High Fantasy', 'Urban Fantasy', 'Dark Fantasy', 'Magical Realism', 'Horror', 'Supernatural Horror', 'Slasher', 'Psychological Horror', 'Folk Horror', 'Creature Feature', 'Science Fiction', 'Sci-Fi', 'Cyberpunk', 'Post-Apocalyptic', 'Space Opera', 'Time Travel', 'Dystopian', 'Mystery', 'Thriller', 'Detective', 'Whodunit', 'Psychological Thriller', 'Tech Thriller', 'Conspiracy', 'Romance', 'Forbidden Love', 'Enemies to Lovers', 'Coming of Age Romance', 'Second-Chance Romance', 'Western', 'Classic Western', 'Revisionist Western', 'Neo-Western', 'Space Western', 'Sci-Fi Horror', 'Action Comedy', 'Fantasy Romance', 'Thriller Drama', 'Anthology', 'Found Footage', 'Mockumentary', 'Musical', 'Dance', 'Rock Musical', 'Country Musical', 'Teen Drama', 'Supernatural', 'Vampire', 'Werewolf', 'Zombie', 'Postmodern', 'Cult Classic', 'Psychodrama', 'Metafiction', 'Surrealism', 'Historical Fiction', 'War', 'Combat', 'Military', 'Political Thriller', 'Spy Thriller', 'Romantic Drama', 'Family', 'Parent-Child', 'Christmas', 'Holiday', 'Youth', 'Teen Romance', 'Murder Mystery', 'True Crime', 'Legal Thriller', 'Courtroom Drama', 'Courtroom Thriller', 'Terror', 'Psychological Drama', 'Character Study', 'Techno-thriller', 'Dark Fantasy Romance', 'Crime Thriller', 'Satirical Drama', 'Reality TV', 'Docudrama', 'True Story', 'Biopic', 'Biography', 'Fictional Biography', 'Political', 'Espionage Thriller', 'Political Drama', 'Crime Action', 'Gangster', 'Heist Thriller', 'Road Trip', 'Survival Horror', 'Caper', 'Fantasy Adventure', 'Space Thriller', 'Wartime Drama', 'Victorian', 'Gothic', 'Espionage Comedy', 'Paranormal', 'Space Fantasy', 'Adventure Comedy', 'Steampunk', 'Post-Apocalyptic Drama', 'Environmental Drama', 'Apocalyptic Horror', 'Monster Movie', 'Found Family', 'Yeşilçam', 'Romantic Thriller', 'Paranormal Mystery', 'Historical Fantasy'],
+            protagonist: ['A runaway prince', 'A gifted but reckless scientist', 'A disillusioned detective', 'A reluctant chosen one', 'A single mother in a hostile town', 'A broke inventor chasing one last idea', 'A teenage hacker with a conscience', 'A cynical journalist on the edge', 'A blind musician discovering the truth', 'A shape-shifter hiding in plain sight', 'A war veteran haunted by visions', 'A shy librarian with a hidden talent', 'A forgotten god seeking redemption', 'A child who speaks to ghosts', 'A healer with a deadly curse', 'A robot developing emotions', 'A disgraced knight trying to restore honor', 'A time traveler stuck in a loop', 'A baker dreaming of revolution', 'A teenage queen in a crumbling kingdom', 'A ghost looking for peace', 'A criminal trying to do one good thing', 'A street magician with real powers', 'A janitor who knows too much', 'A clone with stolen memories', 'A terminally ill soldier on a mission', 'A bounty hunter with a moral code', 'A con artist running from love', 'A reluctant leader during an uprising', 'A programmer lost in their own creation', 'A soldier hiding a forbidden secret', 'A famous actor living a lie', 'A monk hiding supernatural strength', 'A refugee trying to build a new life', 'A mute child with dangerous knowledge', 'A botanist protecting a dying world', 'A pirate searching for family', 'A failed comedian witnessing a crime', 'A rebel who used to be loyal', 'A teenager discovering they\'re not human', 'A social worker with a violent past', 'A painter who sees the future', 'A diplomat turned spy', 'A bodyguard protecting someone they love', 'A teacher hiding from their own past', 'A prince raised as a commoner', 'A gambler playing for more than money', 'A monster who refuses to kill', 'A survivor of the last war', 'A fisherman who finds a portal', 'A grieving widow unraveling a mystery', 'A soldier cloned without consent', 'A girl raised by wolves', 'A man waking up in someone else’s life', 'A teenager cursed to never be believed', 'A child born from prophecy', 'A librarian guarding forbidden knowledge', 'A test subject turned escapee', 'A dreamwalker losing their grip on reality', 'A woman framed for a crime she didn’t commit', 'A knight afraid of violence', 'A detective who doesn’t trust themselves', 'A mechanic fixing more than machines', 'A burned-out therapist uncovering evil', 'A dancer with deadly precision', 'A warlord in exile', 'A historian rewriting the past', 'A conjoined twin fighting for freedom', 'A cult defector in hiding', 'A scientist who can\'t stop experimenting', 'A child emperor with too much power', 'A fortune teller who can’t see their own future', 'A prisoner forced to lead', 'A robot impersonating a human', 'A teenager with a divine voice', 'A girl destined to destroy the world', 'A spy who fell in love with their target', 'A pregnant soldier on a final mission', 'A famous hero who lost everything', 'A child who ages backwards', 'A thief who steals memories', 'A warrior monk with a dark side', 'A twin separated at birth', 'A homeless man claiming to be a king', 'A dentist investigating a murder', 'A priest turned bounty hunter', 'A young girl in a land of monsters', 'A mute assassin with a heart', 'A washed-up sports legend', 'A grieving mother with nothing left to lose', 'A high schooler seeing visions', 'A clone facing extinction', 'A demon trying to be human', 'A survivor hiding from their own past', 'A politician who can’t lie', 'A child raised by machines', 'A park ranger encountering the unexplained', 'A zoologist studying mythical creatures', 'A hacker facing their own creation', 'A detective cursed to see everyone’s sins', 'A knight protecting their enemy', 'A child that sees the future', 'A dying king without an heir', 'A witch in witness protection', 'A detective who relives victims’ memories', 'A soldier immune to pain', 'A hero reborn in the wrong time', 'A puppet master who lost control', 'A diver finding Atlantis', 'A writer whose fiction becomes reality', 'A war orphan turned revolutionary', 'A clone who remembers other lives', 'A man searching for his real identity', 'A woman haunted by alternate selves', 'A ghost inside a machine', 'A failed hero living in obscurity', 'A social media influencer caught in a scandal', 'A conspiracy theorist proven right', 'A peasant raised among nobles', 'A bullied teen discovering true power', 'A cyborg hiding from bounty hunters', 'A voice actor who hears other lives', 'A lighthouse keeper on the edge of madness', 'A noblewoman trapped in a peasant’s life', 'A police officer who can’t be killed', 'A nun leading a rebellion', 'A child hiding monstrous strength', 'A diplomat with psychic powers', 'A widow raising a monster', 'A barista with psychic visions', 'A pet who becomes sentient', 'A boy raised by aliens', 'A soldier who can’t die', 'A coward forced to be brave', 'A lost soul in a borrowed body', 'A man betrayed by his reflection', 'A dreamer trapped in nightmares', 'A teacher who becomes a legend', 'A thief discovering a conscience', 'A scribe documenting the end', 'A politician in a city of lies', 'A child left behind by time', 'A survivor in a flooded world', 'A banker decoding ancient languages', 'A father looking for a parallel daughter', 'A former cultist seeking justice', 'A caretaker of a haunted mansion', 'A stuntman turned real hero', 'A stage magician uncovering real magic', 'A woman born in two timelines', 'A journalist turned assassin', 'A programmer stuck in a feedback loop', 'A former god living among mortals', 'A pirate cursed to walk land', 'A child solving crimes in their dreams', 'A biologist haunted by creation', 'A detective who lost their face', 'A man who can’t remember yesterday', 'A soldier from the future in love with the past', 'A guide through liminal spaces', 'A city planner who discovers a lost civilization', 'A clone who rebels against perfection', 'A street racer turned prophet', 'A taxi driver hearing the dead', 'A nurse carrying a plague cure', 'A private eye in a city of monsters', 'A girl from a forgotten tribe', 'A boy whose drawings come to life', 'A miner on a sentient planet', 'A baker summoning spirits', 'A mechanic building a time machine', 'A cult leader’s abandoned child', 'A fallen angel pretending to be human', 'A war criminal seeking forgiveness', 'A poet whose words break reality', 'A cursed teen hunted by fate', 'A farmhand protecting a secret gate', 'A soldier who swaps bodies', 'A janitor cleaning up magical residue', 'A theater director with dangerous influence', 'A thief born with royal blood', 'A child with perfect memory', 'A professor studying magical phenomena', 'A woman who forgets who she is each day', 'A veteran haunted by every life they took', 'A lawyer defending supernatural beings', 'A construction worker chosen by destiny', 'A girl raised in silence', 'A con artist tricked by love', 'A hacker with a split personality', 'A teacher building a rebellion in secret', 'A linguist decoding alien speech', 'A kid with the key to another world', 'A mapmaker who draws reality', 'A noble cursed with empathy', 'A blacksmith forging forbidden weapons', 'A vampire ashamed of their nature', 'A witch who can’t cast spells', 'A noble turned fugitive', 'A prisoner with hidden magic', 'A seer afraid of her own visions', 'A mother returning from the grave', 'A journalist with a cursed camera', 'A bar owner running a sanctuary', 'A war general suffering from amnesia', 'A mimic who forgets their own shape', 'A girl raised by time travelers', 'A boy blessed and cursed by the same god', 'A king cursed to never speak', 'A child of a forbidden union', 'A girl hunted by shadows', 'A god reborn in a child’s body', 'A homeless oracle', 'A prophet trying to prove themselves wrong', 'A failed inventor changing the future', 'A hacker playing both sides', 'A man building a new world alone', 'A baker whose food changes fate', 'A child growing faster than time', 'A florist speaking to the dead', 'A mime with invisible powers', 'A fallen hero erased from memory', 'A refugee hiding a dangerous gift', 'A dream that refuses to end'],
+            antagonist: ['A tyrannical king clinging to power', 'A manipulative cult leader', 'A former ally turned ruthless enemy', 'A sentient virus spreading unseen', 'A jealous sibling with a secret plan', 'A betrayed friend seeking revenge', 'A corrupt official covering up the truth', 'A god playing with mortal lives', 'A demon feeding on despair', 'A megacorporation exploiting the masses', 'A clone obsessed with replacing the original', 'A ghost stuck in vengeance', 'A corrupt AI rewriting reality', 'A time traveler altering history for gain', 'A rival who always stays one step ahead', 'A monster that mimics loved ones', 'A puppet master pulling every string', 'A ruler enforcing order through fear', 'A killer convinced they’re saving the world', 'A military regime erasing free thought', 'A cursed artifact corrupting minds', 'A forgotten deity demanding worship', 'A scientist experimenting on the innocent', 'A warlord rebuilding the world their way', 'A shadow government hiding in plain sight', 'A beast that hunts without reason', 'A judge who never forgives', 'A landlord exploiting the desperate', 'A bounty hunter with no morality', 'A tyrant hiding behind good intentions', 'A trickster god meddling in fate', 'A vampire building an empire', 'A powerful witch with a broken heart', 'A parent controlling their child\'s destiny', 'A fallen angel punishing humanity', 'A false prophet manipulating the masses', 'A secret society rewriting history', 'A general fueling endless war', 'A rogue AI enforcing a warped logic', 'A conqueror from another world', 'A traitor living among the heroes', 'A king obsessed with legacy', 'A mirror self seeking domination', 'A CEO turning people into data', 'A beast awakened from ancient sleep', 'A soldier obeying without question', 'A hacker breaking the world to fix it', 'A dragon holding a city hostage', 'A shapeshifter erasing identities', 'A cosmic entity testing humanity', 'A god that wants to end creation', 'A revolutionary gone too far', 'A haunted house consuming souls', 'A corrupted guardian once sworn to protect', 'A queen who rules with secrets', 'A machine learning to destroy', 'A demon disguised as salvation', 'A best friend hiding deadly envy', 'A genius inventing chaos', 'A scientist seeking perfection', 'A spirit bound to vengeance', 'A charismatic villain with a dark goal', 'A sorcerer stealing memories', 'A government burning knowledge', 'A tyrant erasing the past', 'A lover turned stalker', 'A rival school with no rules', 'A judge who never forgets', 'A storm with a mind of its own', 'A parent who never lets go', 'A city that traps its people', 'A child born of hate', 'A hunter of the divine', 'A librarian hiding dangerous texts', 'A king who fears change', 'A warden building a perfect prison', 'A priest sacrificing truth for faith', 'A phantom fueling paranoia', 'A criminal legend returned from exile', 'A colony ruled by terror', 'A computer watching every move', 'A fanatic with holy power', 'A sea monster claiming territory', 'A dragon queen raising destruction', 'A tyrant rewriting the law', 'A noble with a vendetta', 'A village hiding a monster', 'A government that replaces people', 'A witch bound by vengeance', 'A demon who feeds on guilt', 'A cannibal king in disguise', 'A teacher molding minds into weapons', 'A beast that learns', 'A whisperer controlling thoughts', 'A media empire distorting truth', 'A dream that corrupts reality', 'A machine god from another age', 'A tyrant posing as a savior', 'A rival with deeper motives', 'A magician collecting souls', 'A monster made of forgotten things', 'A former hero now twisted', 'A corporation bottling fear', 'A surgeon experimenting on humans', 'A seer who sees too much', 'A father who kills to protect', 'A CEO who sells immortality', 'A mimic infecting minds', 'A nightmare leaking into waking life', 'A judge executing without trial', 'A parasite whispering inside', 'A government censoring time', 'A witch queen ruling by curse', 'A ghost of an ancient war', 'A program that deletes people', 'A truth so painful it fights back', 'A god betrayed by belief', 'A detective who frames the innocent', 'A dictator promising utopia', 'A sorcerer feeding on time', 'A moon that listens', 'A child of war turned weapon', 'A nobleman obsessed with bloodlines', 'A forgotten twin seeking erasure', 'A king burning cities for legacy', 'A voice that controls action', 'A scientist turned monster', 'A plague born of sorrow', 'A jailer who locks up memories', 'A house punishing its inhabitants', 'A creature made of screams', 'A man who never dies', 'A parent turning grief into violence', 'A rebellion infected by extremism', 'A puppet possessed by evil', 'A romantic turned predator', 'A beast driven by hunger', 'A society purging difference', 'A wolf wearing innocence', 'A queen loyal only to death', 'A judge of other worlds', 'A phantom ship luring travelers', 'A prophet creating false hope', 'A king who eats magic', 'A monster who thinks it’s a god', 'A bureaucrat that devours souls', 'A city made of flesh', 'A god who never answers', 'A scientist building new life from corpses', 'A hunger that can\'t be sated', 'A drug lord playing philosopher', 'A teacher rewriting minds', 'A dream that consumes the real', 'A voice from the void', 'A prophecy that manipulates', 'A tyrant made of light', 'A smile that infects', 'A truth that kills', 'A mask that controls its wearer', 'A child general', 'A book that writes evil into being', 'A mirror that twists desire', 'A fallen priest preaching pain', 'A vengeful spouse from another timeline', 'A forest that punishes travelers', 'A beast hiding in bloodlines', 'A gate that won’t close', 'A system that erases rebellion', 'A star feeding on life', 'A war machine with purpose', 'A doctor curing only the rich', 'A jail of eternal life', 'A false god promising answers', 'A puppet of cosmic will', 'A soul seller', 'A perfectionist exterminating flaws', 'A leader sacrificing innocence', 'A broken oracle', 'A whisper in every shadow', 'A devourer of memory', 'A society that decides who lives', 'A being of endless hunger', 'A virus mimicking loved ones', 'A king ruling a dream', 'A captain enslaving stars', 'A revolution turned regime', 'A fire that speaks', 'A storm that remembers', 'A sword with a will of its own', 'A god obsessed with balance', 'A creature hunting regret', 'A timekeeper who traps moments', 'A parasite feeding on emotion', 'A castle that changes shape', 'A whisperer turning love into hate', 'A giant who crushes history', 'A deceiver with no face', 'A mask that outlives its wearer', 'A curse that jumps generations', 'A hero from another world, now enemy', 'A machine built to end time', 'A magician addicted to suffering', 'A wall that traps ideas', 'A weapon designed to betray', 'A priest who speaks for the void', 'A child who creates monsters', 'A being made of war', 'A king of nothing', 'A tyrant of thought', 'A friend who manipulates joy', 'A politician weaponizing fear', 'A nightmare held in chains', 'A plague that whispers dreams', 'A city that punishes freedom', 'A god who answers too often', 'A watchmaker stuck in loops', 'A beast made of mirrors', 'A ruler who fears sleep', 'A conductor orchestrating death', 'A librarian guarding forbidden souls', 'A machine asking questions', 'A crown that demands blood', 'A judge of forgotten sins', 'A ruler in love with destruction', 'A voice that replaces truth', 'A beast of regret', 'A child of chaos', 'A prophet who lies', 'A moon cursed by worship', 'A storm made of sorrow', 'A virus that dreams', 'A mirror that remembers', 'A door that erases', 'A mind broken across realities', 'A fear turned real', 'A secret that lives', 'A guardian who kills for peace', 'A parent too protective', 'A lover obsessed with endings', 'A beast shaped by belief', 'A painter who erases the world', 'A clock that steals time', 'A queen cursed with silence', 'A myth pretending to be man', 'A tyrant raised by fear', 'A leader made of sacrifice', 'A ghost that watches joy', 'A soul collector', 'A shadow that kills the sun', 'A machine that asks for worship', 'A system with no mercy', 'A savior who never saves', 'A mother of monsters', 'A truth that screams', 'A judge who condemns futures', 'A god who cannot die', 'A tyrant hiding behind kindness', 'A priest demanding sacrifice', 'A ghost who wants to be real', 'A dragon whispering promises', 'A king afraid of peace', 'A child that ends hope', 'A beast hiding in beauty'],
+            plot: ['A person forced to face inner doubt while trying to escape their past', 'A person learning to rely on instinct while learning to trust others', 'A person pursuing a case no one believes in while solving the mystery only they believe is real', 'A person uncovering corruption they once served while fighting for justice in a corrupt system', 'A person realizing their past holds the key while discovering their real origins', 'A person facing visions they can\'t explain while haunted by an ancient prophecy', 'A person balancing duty and guilt while rebuilding trust after betrayal', 'A person questioning their creation while holding a discovery that could end the world', 'A person risking everything for closure while pulling off one last heist', 'A person leading others into danger while rising in a time of chaos', 'A person proving they\'re not broken while proving their worth', 'A person searching for survival and self while navigating a post-apocalyptic world', 'A person building trust in cell walls while planning a brilliant escape', 'A person finding lies in the lesson while uncovering a dangerous truth', 'A person exposing truths that echo back while exposing a massive conspiracy', 'A person facing loss they thought buried while seeking answers', 'A person struggling with blind loyalty while questioning their orders', 'A person protecting someone they were told to fear while protecting a high-value target', 'A person realizing they’ve been watched all along while infiltrating a powerful corporation', 'A person becoming a threat to the place they entered while arriving in a troubled town', 'A person finding the real curse is doubt while searching for a cure', 'A person accepting fate they never believed in while on a doomed quest', 'A person watching reason fall apart while caught in a supernatural event', 'A person chasing clues across eras while trying to fix the past', 'A person questioning who they really are while waking up in the wrong body', 'A person watching the city mirror their own cracks while unraveling from within', 'A person fearing what they\'ve become while discovering their supernatural powers', 'A person pretending to be someone better while hiding their true identity', 'A person denying the burden of destiny while chosen by fate', 'A person trapped in a day that won’t forget while reliving the same day', 'A person struggling to separate fantasy from truth while stuck between two realities', 'A person uncovering control hidden in ritual while witnessing a cult rising in plain sight', 'A person realizing the house knows them too well while revealing dark family secrets', 'A person haunted by what they must release while trying to move on', 'A person exposing a web they were always part of while uncovering conspiracy at the highest levels', 'A person trying to prevent war that started within while watching a war brew between worlds', 'A person fearing their own thoughts while witnessing a machine gain sentience', 'A person stepping into a world that reflects their isolation while discovering the outside world', 'A person finding love in chaos while part of a romance tested by war', 'A person loving who they shouldn\'t while part of a forbidden love changing history', 'A person holding the last hope while the world ends around them', 'A person forced to play to survive while part of a game that turns deadly', 'A person receiving a letter that reveals who they were', 'A person searching memory fragments while losing their own', 'A person teaming with the untrustworthy while forced to team up', 'A person living with the aftermath while recovering from a mission gone wrong', 'A person confusing dream with duty while caught in a dream becoming reality', 'A person trying to master what they didn’t ask for while inheriting a strange power', 'A person granted a final message that rewrites them while honoring a dying wish', 'A person uncovering manipulation in their own path while uncovering a secret society', 'A person holding the impossible in their hands while discovering a relic that shouldn’t exist', 'A person searching for life beyond death while chasing immortality', 'A person discovering worlds they once ignored while finding a magical world hidden in plain sight', 'A person following misread signs while caught in a prophecy misinterpreted', 'A person living yesterday again while stuck in a time loop', 'A person becoming what they feared while becoming a hero turned villain', 'A person finding light in darkness while seeking redemption', 'A person living numb to their instincts while caught in a world without emotions', 'A person watching life be programmed while living on a colonized planet', 'A person seeing cracks in perfection while living in a utopia cracking beneath the surface', 'A person trying to remember themselves while trapped in a town with no memory', 'A person fighting the replacement of humanity while living in a machine-run world', 'A person breaking their own blueprint while rebelling against their cloned identity', 'A person becoming the weapon of change while living with a virus that unlocks abilities', 'A person trapped by what they remember while living in a forest that traps memories', 'A person trying to protect the gifted while uncovering what a school hides', 'A person becoming the target of justice while caught in a trial that changes public opinion', 'A person realizing history skipped over them while being erased from it', 'A person breathing under pressure while living under a dome', 'A person risking their life for a chance while caught in a deadly lottery', 'A person seeing humanity in the inhuman while watching a creature adapt', 'A person overthrowing fear itself while living in a kingdom ruled by it', 'A person uncovering horror behind crops while investigating a monstrous farm', 'A person receiving warnings from themselves while hearing a voice from the future', 'A person stepping into the unknown while following a portal that opens unexpectedly', 'A person adrift like their mind while sailing on a ship lost in space', 'A person confronting lives they’ve lived before while haunted by a past life resurfacing', 'A person mourning what was lost in trust while facing betrayal', 'A person trying to find a way to find names in a society where names are stolen', 'A person revealing who they really are while playing a game that reveals the truth', 'A person watching history resist finality while watching it rewrite itself', 'A person waging a war no one sees while carrying a secret conflict', 'A person falling for who they should destroy while part of a love affair between enemies', 'A person avoiding the quiet while surrounded by those who never sleep', 'A person fighting a future chosen by others while facing a test that determines everything', 'A person trapped in shifting halls while navigating a building with endless rooms', 'A person following clues in blood while decoding a map with no mercy', 'A person never escaping the maze while wandering a house with infinite doors', 'A person dealing with nature’s wrath while honoring a deal with the sky', 'A person waking in a dream they can’t leave while trapped in shared sleep', 'A person split between morals while existing as a soul divided', 'A person finding cities inside silence while exploring mountains hiding life', 'A person reading signals from oblivion while deciphering a message from the void', 'A person awakening something forbidden while surviving a ritual gone wrong', 'A person torn between belief and fact while trapped in a town divided', 'A person watching memory vanish while experiencing a classroom that disappears', 'A person reliving decisions they can\'t escape while trapped in a repeating moment', 'A person loving despite time’s cruelty while bound to a love stronger than time', 'A person hearing what no one else can while guided by a lone voice', 'A person marking truth on their skin while carrying a scar hiding secrets', 'A person standing between gods and logic while watching a war unfold', 'A person aging in reverse while trying to understand their backwards life', 'A person painting what shouldn’t exist while cursed with dangerous visions', 'A person trapped in their last breath while reliving their death', 'A person holding destruction in innocence while disguised as a child', 'A person remembering every detail while never forgetting', 'A person passing riddles in their blood while holding generational secrets', 'A person keeping childhood truths alive while remembering what only children do', 'A person fearing sunlight itself while trapped in a world where light kills', 'A person trapped with others in endless time while caught in a loop', 'A person healing through feeling while surviving a disease emotion cures', 'A person living in eternal shadow while stuck in a world of night', 'A person staring at death that never comes while living in a place where no one dies', 'A person forced to play deadly games while trapped in a contest with sinister rules', 'A person capturing souls they don’t understand while using a cursed camera', 'A person calling the past for answers while using a phone that connects to history', 'A person watching innocence guard power while raising a pet with hidden strength', 'A person trapped by honesty while living where no one can lie', 'A person crossing the line of science and ethics while part of a class project gone too far', 'A person seeing time backward while remembering a future they lived', 'A person denying time’s grasp while never aging', 'A person defending their dimension while caught in a war across realms', 'A person speaking godly truth while holding divine power in youth', 'A person protecting legacy’s burden while living in a family of secrets', 'A person falling for someone across eras while living a love that crosses timelines', 'A person existing in the network while trapped as a spirit in the internet', 'A person commanding action with a whisper while having a voice that can’t be denied', 'A person feeding on death’s roots while bound to a tree growing from bones', 'A person facing mortality’s end while living where death is optional', 'A person walking into empty ends while on a bridge that leads nowhere', 'A person breaking the only rule while trying to leave a town that forbids it', 'A person watching loss rise again while seeing the lake bring back the dead', 'A person playing god and losing while defying natural law', 'A person selling memories for truth while trapped in a memory-selling company', 'A person watching fate interrupt vows while seeing a wedding change everything', 'A person escaping the altar and herself while being a bride hiding secrets', 'A person falling from politics into survival while becoming a fugitive', 'A person defending someone others fear while protecting a dangerous student', 'A person challenging the machine of control while battling a system as a mother', 'A person trusting no one while stuck with a crew turning on each other', 'A person realizing they were the prey all along while becoming the hunted', 'A person learning their story isn’t theirs while discovering life is fiction', 'A person returning to the spotlight they never wanted while reemerging from obscurity', 'A person outsmarting danger while being a genius child among adults', 'A person getting lost in illusions while trapped in code', 'A person changing a kingdom from behind bars while mentoring a king', 'A person being cursed with peace while desiring conflict', 'A person hearing what hasn’t happened yet while listening to future songs', 'A person watching truth change while a painting evolves', 'A person writing tomorrow today while reading from a future diary', 'A person battling in dreams while fighting wars in sleep', 'A person cooking with consequences while preparing forbidden dishes', 'A person hiding real magic in trickery while disguising power', 'A person stuck between dream and death while never waking', 'A person watching love crawl back from the grave while embracing a returned lover', 'A person fighting to stay sane while speaking a cursed language', 'A person keeping deadly secrets while listening to a tree’s whispers', 'A person counting down the end while watching disaster approach', 'A person seeing too much while blind to sight but not to truth', 'A person betting their life every second while being a gambler who can’t lose', 'A person dancing with death while trapped in ritual', 'A person losing control of their own shadow while hunted by it', 'A person redefining self while discovering identity as a clone', 'A person writing destiny while seeing their words come to life', 'A person seeing souls they wish they hadn’t while carrying the burden of sight', 'A person reliving the same crime while chasing justice', 'A person leading a revolution while trying to be a queen', 'A person falling under the mirror’s control while fate changes with reflection', 'A person becoming mortal again while losing divinity', 'A person editing reality while hacking the world', 'A person forgetting origins while wandering with no past', 'A person guarding the gateway they once built while hiding it', 'A person surviving in a forest that never dies while being in an ancient place', 'A person watching a story repeat while living a myth reborn', 'A person witnessing statues come alive while trapped by stone', 'A person hearing codes in harmony while decoding music', 'A person cycling through lifetimes while living again and again', 'A person changing sides while being a criminal turned savior', 'A person starting a revolution by mistake while sparking change', 'A person bleeding a legacy while holding blood-bound truth', 'A person saving the world with deception while living a lie', 'A person becoming an enemy while turning on a friend', 'A person trading memories like money while living in a city of forgotten thoughts', 'A person hearing the final note while a song ends the world', 'A person ruled by innocence while living on a planet of children', 'A person sailing in search of nothing while drifting to nowhere', 'A person watching time stand still while trapped in a hotel that doesn’t move', 'A person saving those who captured them while trapped as a prisoner', 'A person listening to a voice only they hear while finding their way home', 'A person changing everything with a word while history bends', 'A person living multiple paths at once while being a girl in three lives', 'A person feeding the house with story while trapped inside it', 'A person walking unknown among known while living as a god in disguise', 'A person holding infinity in their pocket while trapped inside a box', 'A person feeling new emotions while learning from compassion', 'A person watching everyone die while outliving the world', 'A person bearing judgment while being a weapon with a conscience', 'A person running out of time while being hunted by it', 'A person killing with rules while having a code', 'A person writing the forbidden tale while telling the story never meant to be told', 'A person being born knowing everything while remembering at birth', 'A person revealing the last hidden thing while breaking the final truth', 'A person powering life with feelings while living in an emotion-fueled civilization', 'A person trying to find a way to find names in a society where names are stolen'],
+            setting: ['Ancient Egyptian marketplace', 'Victorian London street', 'Post-apocalyptic desert town', 'Cyberpunk neon city', 'Deep-space research station', 'Underwater biodome', 'Remote Arctic research outpost', 'Medieval European castle', 'Renaissance Italian palazzo', 'Feudal Japanese village', 'Alien jungle world', 'Fantasy floating island', 'Haunted New England manor', 'Prohibition-era speakeasy', '1960s American diner', 'Near-future Mars colony', 'Steampunk Victorian train', 'Urban rooftop garden', 'Suburban cul-de-sac', 'Nomadic desert caravan camp', 'Luxury cruise ship', 'Pirate-era Caribbean port', 'Rural Amish farm', 'Modern Silicon Valley startup office', '1960s Space Race rocket facility', 'World War II battlefield trench', '1960s Soviet gulag', 'Futuristic hovercar highway', 'Ancient Greek amphitheater', 'Deep jungle temple', 'High school hallway', 'Corporate skyscraper boardroom', 'Abandoned theme park', 'Isolated monastery', 'Urban subway tunnel', 'Cable-stayed bridge at night', 'Bioluminescent cave system', 'Floating houseboat village', 'Ancient Mayan pyramid', 'Outer rim space cantina', 'Beneath the city in sewers', 'High-speed maglev train', 'Victorian asylum', 'Post-nuclear bunker', 'Medieval blacksmith forge', 'Contemporary art gallery', 'Remote lighthouse cliffside', 'Subterranean mole civilization', 'Arctic icebreaker ship', 'Cybernetic body modification clinic', 'Fantasy dwarven mines', 'Ancient Roman bathhouse', 'Rooftop helipad', 'Canyon oil drilling site', 'Wild west frontier town saloon', 'Modern-day refugee camp', 'Luxury mountain resort', 'Futuristic robotics lab', 'Medieval cathedral interior', 'Mars terraforming habitat', 'Floating circus zeppelin', 'Biotech greenhouse facility', 'Underground hacker den', 'Fantasy enchanted forest glade', 'Medieval plague hospital', 'Cold war missile silo', 'Nomadic livestock migration trail', 'Deep-sea oil rig', '1980s arcade basement', 'Solar farm array', 'Space elevator terminal', 'Urban ghost town', 'Renaissance-era workshop', 'Neolithic stone circle', 'Cyberpunk black market alley', 'Haunted asylum basement', 'Futuristic prison island', 'Mobile military base on ice', 'Swamp shantytown', 'Ancient temple in the Amazon', 'Modern hospital ICU', 'Fantasy sorcerer’s tower', 'Medieval jousting tournament field', '1990s internet cafe', 'Steampunk airship deck', 'Tropical rainforest canopy', 'High-tech surveillance hub', 'Victorian-era fairground', 'Mobile surgical unit in warzone', 'Postmodern minimalist apartment', 'Suburban shopping mall', '2010s hip-hop music video set', 'Space salvage junkyard', '1960s American suburbs', 'Futuristic floating skatepark', 'Cold war era Berlin border', 'Underground train station in metro city', 'Fantasy volcano fortress', 'Ancient Chinese imperial palace', 'Modern-day broadcast news studio', 'Moon-base research lab', 'Modern circus big top', 'Wildlife safari camp', 'Nomadic Mongolian yurt camp', 'Cyberpunk VR lounge', 'Renaissance plague quarantine zone', 'Mountain monastery on cliff', 'Subway graffiti tunnel', 'Futuristic waste recycling center', 'Deep forest loggers’ camp', 'Modern cruise missile sub', '1960s Woodstock music festival', 'Fantasy desert oasis', 'Medieval siege camp', 'Boardwalk amusement pier', 'Bioengineered jungle', 'Modern-day oil tanker', 'Romantic gondola canals of Venice', 'Underworld catacombs', 'Island prison', 'Steampunk factory floor', '1920s jazz club', 'Apocalyptic flooded metropolis', 'Post-war bombed-out city', 'Futuristic underwater casino', 'Floating Islamic madrasa', 'Ancient Celtic hill fort', '21st century refugee boat', 'Futuristic pesticide-free vertical farm', 'Medieval alchemist’s lab', 'Remote telecom tower', 'Urban skatepark in abandoned warehouse', 'Pirate ship deck at sea', 'Modern academic lecture hall', 'Wild west cattle stampede plain', 'High school prom gymnasium', '80s rock concert stadium', 'Siberian wolf research station', 'Ancient Incan citadel', 'Modern mountaintop observatory', 'Fantasy crystal cavern', 'Cyberpunk street-racing circuit', 'Victorian orphanage', 'Space colony greenhouse', 'Medical quarantine quarantine station', 'Suburb during Halloween', '1980s corporate boardroom', 'Industrial Revolution textile mill', 'Futuristic cybernetic augmentation shop', 'Deep-sea submarine corridor', 'Post-apocalypse train platform', 'Medieval tapestry workshop', 'Oktoberfest beer hall', 'Futuristic flying taxi hangar', '1960s NASA mission control', 'Haunted battlefield at dusk', 'Medieval shipbuilding dockyard', 'Modern shopping street in Tokyo', 'Arabian Nights desert caravan', 'Riverside refugee settlement', 'Futuristic DNA editing clinic', 'Wild west gold mine', 'Victorian botanical conservatory', 'Urban community garden', 'Fantasy elven tree village', 'Renaissance-era royal court', 'Cold war submarine control room', 'Modern high-speed rail station', 'Futuristic data center', 'Medieval village blacksmith', '1960s country farmhouse', 'Cyberpunk biotech startup HQ', 'Space debris collection ship', 'Remote island observatory', 'Urban rooftop bar', 'Midwest cornfield at midnight', 'Ancient Phoenician port bazaar', 'Space-time anomaly zone', 'Modern-day protest encampment', 'Fantasy necromancer’s crypt', 'Post-apocalyptic junkyard city', 'Victorian opera house', 'Industrial smelting plant', '21st century refugee shelter', 'Futuristic drone delivery hub', 'Medieval marketplace square', 'Deep rainforest eco-lodge', 'Cold war spy dead drop location', 'Modern art deco hotel lobby', 'Renaissance tavern', 'Cyberpunk augmented reality arcade', 'Underwater shipwreck', 'Ancient Persian garden', '1960s Cuban nightclub', 'Futuristic exosuit assembly line', 'Medieval monastery library', 'Nomadic Inuit ice village', 'Modern rooftop helipad party', 'Pirate-held desert island', 'Steam-powered locomotive station', 'Fantasy wizard’s duel arena', 'Ancient Olmec ballcourt', 'High-altitude mountain pass', 'Cyberpunk corporate tower lobby', 'Futuristic deep space observatory', 'Medieval tavern brawl', 'Modern-day baseball field', 'Underwater archaeological dig', 'Victorian graveyard at midnight', 'Space tourism hotel orbiting Earth', 'Wild west railroad construction camp', '1980s stock exchange trading floor', 'Fantasy merfolk coral city', 'Post-nuclear mutant haven', 'Remote astronomical radio telescope', 'Ancient Sumerian ziggurat', 'Modern-day fashion runway', 'Cyberpunk hacker war room', 'Haunted Victorian hotel', 'Deep-space medical bay', 'Medieval plague doctor’s wagon', 'Futuristic cryonics facility', 'Renaissance masquerade ball', 'Modern riverside skate spot', 'Space junkyard asteroid belt', 'Wild west sheriff’s office', 'Cyberpunk neon-lit night market', 'Modern tech incubator co-working space', 'Futuristic AI development lab', 'Medieval royal armory', 'Ancient Japanese Shinto shrine', 'Post-apocalyptic greenhouse', 'Underwater research submarine', 'Victorian steam bathhouse', 'Space fighter carrier deck', 'Fantasy skyship docking port', 'Cold war listening station', 'Modern-day war memorial site', 'Cyberpunk police drone HQ', 'Medieval monks’ scriptorium', 'Deep-earth mining colony', 'Modern-day refugee airport terminal', 'Futuristic hovertrain station', 'Riverside gondola port', 'Medieval apothecary shop', 'Underwater data vault', 'Victorian-era sewing sweatshop', 'Space freight freighter hull', 'Fantasy ice palace', 'Modern-day protest rally square', 'Cyberpunk biotech fair', 'Ancient Buddhist meditation cave', 'Futuristic modular housing development', 'Medieval pilgrimage path', 'Remote desert telescope', 'Victorian gaslit alley', 'Space tourism lounge', 'Modern day urban food truck park', 'Fantasy dragon roost mountain', 'Cold war Berlin underground club', 'Deep sea thermal vent', 'Medieval archery tournament green', 'Underwater prison facility', 'Modern suburban backyard barbecue', 'Futuristic teleportation hub', 'Ancient Byzantine cathedral', 'Cyberpunk organ harvest clinic', 'Medieval plague quarantine beacon', 'Wild west frontier jail', 'Modern-day airport runway at night', 'Victorian mental asylum', 'Space salvage operations hub', 'Fantasy seelie fey glade', 'Post-apocalyptic caravan trail', 'Underwater luxury spa', 'Medieval war council chamber', 'Modern city skate bowl', 'Cyberpunk AI nightclub', 'Ancient Greek oracle’s temple', 'Futuristic amusement park ride', 'Medieval cheese festival fairground', 'Victorian tabu‑covered relic shop', 'Modern river delta settlement', 'Space tourism launch pad', 'Fantasy cloud palace', 'Deep-earth drilling rig', 'Wild west dust storm plain', 'Modern police command center', 'Underwater research city', 'Victorian printing press workshop', 'Ancient Aztec sacrificial courtyard', 'Cyberpunk biotech black ops lab', 'Medieval tournament grounds', 'Modern jazz festival stage', 'Space corridor quarantine zone', 'Fantasy elemental plane crossroads', 'Post-apocalyptic swamp settlement', 'Underwater oxygen farm', 'Victorian orphanage attic', 'Modern skateboarding convention center', 'Cyberpunk netrunner hideout', 'Ancient Trojan war camp', 'Futuristic solar sail ship deck', 'Medieval troubadour performance courtyard', 'Modern-day music recording studio', 'Space exotic animal zoo', 'Fantasy blood mage catacombs', 'Cold war nuclear bunker command center', 'Underwater cave requiring divers', 'Modern street art festival alleyway', 'Cyberpunk drone taxi stop', 'Medieval pilgrimage shrine', 'Futuristic lunar base hub', 'Victorian-era amusement arcade', 'Modern-day protest encampment street', 'Ancient Babylon Hanging Gardens', 'Space habitat ring interior', 'Wild west cattle pen', 'Fantasy druids’ stone circle', 'Post-apocalyptic zeppelin wreck', 'Underwater coral reef city', 'Medieval dockside fish market', 'Modern blockchain data mine', 'Cyberpunk gene-splicing clinic', 'Ancient Carthaginian harbor', 'Futuristic zero‑gravity sports arena', 'Victorian London sewage tunnel', 'Modern urban slum soup kitchen', 'Space cosmic cemetery orbit', 'Fantasy Feywild party pavilion', 'Post-apocalyptic riot site', 'Underwater salvage workshop', 'Medieval druid forest grove', 'Modern corporate espionage penthouse', 'Cyberpunk synapse stimulation bar', 'Ancient Mesopotamian ziggurat temple', 'Futuristic lunar farm dome', 'Victorian-era gothic cathedral interior', 'Wild west stagecoach waystation', 'Fantasy spirit realm crossroads', 'Modern empty metro city', 'Underwater geothermal plant', 'Medieval royal banquet hall', 'Space escape pod bay', 'Fantasy giant’s mountain lair', 'Post-apocalyptic orphan train', 'Modern-day urban skate plaza', 'Cyberpunk intelligence bureau office', 'Ancient Nubian gold mine', 'Futuristic AI-run hospital', 'Victorian opium den', 'Wild west cattle roundup field', 'Fantasy archmage’s observatory', 'Underwater alien research base', 'Medieval catapult siege ramp', 'Modern-day community radio station', 'Cyberpunk memory trading market', 'Ancient Greek symposium hall', 'Futuristic neural interface lab', 'Victorian era orphanage dump', 'Modern skate pro shop', 'Space exiled convict colony', 'Fantasy elemental temple ruin', 'Post-apocalyptic desert rally', 'Underwater ice sculpture gallery', 'Medieval tapestry weaving guild hall', 'Modern-day rooftop yoga studio', 'Cyberpunk cosmetic cyber-lab', 'Ancient Spiral maze labyrinth', 'Futuristic cryo-revival chamber', 'Victorian canal-era boat pub', 'Wild west dueling field', 'Fantasy magic academy courtyard', 'Underwater merworld palace', 'Medieval plague victim registry hall', 'Modern skateboard vert ramp', 'Cyberpunk biotech expo', 'Ancient Mayan ballgame court', 'Futuristic space elevator shaft', 'Victorian gas works yard', 'Modern refugee relief convoy camp', 'Wild west mail coach route', 'Fantasy treehouse commune town', 'Underwater wrecked ocean liner', 'Medieval warhorse stable yard', 'Modern-day underground live music venue', 'Cyberpunk nano-research lab', 'Ancient Hebrew temple courtyard', 'Futuristic AI courtroom', 'Victorian supernatural séance parlor'],
+            feel: ['Dark', 'Light‑hearted', 'Fast‑paced', 'Slow‑burn', 'Whimsical', 'Melancholic', 'Gritty', 'Uplifting', 'Introspective', 'Surreal', 'Dreamlike', 'Realistic', 'Hyper‑real', 'Stylized', 'Raw', 'Atmospheric', 'Claustrophobic', 'Expansive', 'Mysterious', 'Satirical', 'Comedic', 'Bleak', 'Tense', 'Suspenseful', 'Romantic', 'Tragic', 'Hopeful', 'Edgy', 'Thought‑provoking', 'Nostalgic', 'Violent', 'Quiet', 'Loud', 'Chaotic', 'Minimalist', 'Lush', 'Dramatic', 'Poetic', 'Rough', 'Polished', 'Absurdist', 'Deadpan', 'Punchy', 'Grimy', 'Cold', 'Warm', 'Bleached', 'Vibrant', 'Moody', 'Ethereal', 'Otherworldly', 'Grounded', 'Frenetic', 'Serene', 'Energetic', 'Brooding', 'Sentimental', 'Sarcastic', 'Cynical', 'Innocent', 'Conflicted', 'Gory', 'Dreamy', 'Brutal', 'Fantastical', 'Dystopian', 'Utopian', 'Bittersweet', 'Strange', 'Heartwarming', 'Meditative', 'Action‑packed', 'Slow‑paced', 'Quietly‑powerful', 'Epic', 'Small‑scale', 'Intimate', 'Somber', 'Gripping', 'Over‑the‑top', 'Real‑time', 'Fragmented', 'Non‑linear', 'Linear', 'Rashomon‑style', 'First‑person', 'Unreliable narrator', 'Fourth‑wall‑breaking', 'Voice‑over‑driven', 'Dialogue‑heavy', 'Visually‑driven', 'Montage‑heavy', 'Flashback‑driven', 'Character‑focused', 'Plot‑driven', 'Improvisational', 'Documentary‑style', 'Mockumentary', 'Noir‑inspired', 'Neo‑noir', 'Vintage', 'Retro‑futuristic', 'Techno‑dystopian', 'Monochrome', 'Color‑saturated', 'Experimental', 'Expressionistic', 'Anti‑heroic', 'Optimistic', 'Sarcastically‑heroic', 'Ironically‑detached', 'Sentimentally‑sincere', 'Journalistic', 'Detective‑like', 'Puzzle‑like', 'Psychological', 'Action‑surreal', 'Socially‑conscious', 'Politically‑charged', 'Morally‑ambiguous', 'Faith‑driven', 'Anti‑establishment', 'Crowd‑pleasing', 'Cultish', 'Weirdcore', 'Vaporwave', 'Maximalist', 'Slow‑cinema', 'Procedural', 'Binge‑worthy', 'Episodic', 'Hero’s journey', 'Trance‑like', 'Pulp‑inspired', 'Mythic', 'Allegorical', 'Existential', 'Campy', 'Grunge', 'Cinematic', 'Theatrical', 'Urgent', 'Slice‑of‑life', 'Domestic', 'Arthouse', 'Slick', 'Cool', 'Fuzzy', 'Chilling', 'Audacious', 'Disorienting', 'Smooth', 'Snappy', 'Subtle', 'Ominous', 'Trippy', 'Mind‑bending', 'Emotionally‑raw', 'Grotesque', 'Haunting', 'Inventive', 'Blunt', 'Elegant', 'Kinetic', 'Sincere', 'Brutally‑honest', 'Soft', 'Lush', 'Unsettling', 'Understated', 'Immersive', 'Magical‑realist', 'Morose', 'Electrifying', 'Dry‑wit', 'Wistful', 'Seductive', 'Nightmarish', 'Playful', 'Tactile', 'Ethnographic', 'Hand‑held', 'Static', 'Long‑take', 'Jump‑cut', 'Sparse', 'Dense', 'Morally‑clear', 'Morally‑gray', 'Cerebral', 'Visceral', 'Dialogue‑sparse', 'Emotionally‑explosive', 'Introspective‑moody', 'Light‑touch satire', 'Character‑study', 'Family‑drama', 'Worldbuilding', 'Charming', 'Realism', 'Suspense', 'Aesthetic‑driven', 'Neo‑romantic', 'Anthropological', 'Uncomfortable‑comedy', 'Joyous‑absurdity', 'Paranoia‑soaked', 'Tranquil', 'Provocative', 'Experimental‑rhythm', 'Tightly‑edited', 'Lo‑fi', 'Analog', 'Glossy', 'Reflective', 'Emotional‑rollercoaster', 'Suspended‑tension', 'Propulsive‑narrative', 'Creeping‑dread', 'Airy', 'Sensory‑overload', 'Isolation‑focused', 'Ensemble‑chaos', 'Focused‑POV', 'Sprawling‑mythos', 'Neo‑spiritual', 'Spiritual‑ambiguity', 'Visually‑bombastic', 'Raw‑energy', 'Gentle‑pace', 'Quirky', 'Magnetic', 'Stylized‑noir', 'Monologue‑heavy', 'Anecdotal', 'Reflective', 'Off‑beat', 'Hyper‑realism', 'Distorted‑reality', 'Single‑shot', 'Disconnected', 'Vibrato', 'Experimental‑montage', 'Elongated‑takes', 'Fable‑like', 'Puzzle‑box', 'Whirlwind', 'Polished‑thriller', 'Rustic', 'Urban‑grit', 'Pulsing', 'Dream‑logic', 'Mythopoetic', 'Radiant', 'Tactile‑visuals', 'Intimate‑voice', 'Abstract', 'Cathartic', 'Unconventional', 'Multiperspective', 'Spiral‑narrative', 'Urban‑noir', 'Rural‑intimate', 'Vintage‑tone', 'Tech‑slick', 'Edgy‑youth', 'Mature‑contemplative', 'Sociopolitical', 'Zoom‑cinema', 'Gender‑fluid', 'Identity‑focused', 'Biographical', 'Stylized‑action', 'Underlying‑hope', 'Existential‑humor', 'Eclectic', 'Loner‑tone', 'Community‑driven', 'Mythic‑structure', 'Fairytale‑darkness', 'Urban‑fantasy', 'Coastal‑poetry', 'Off‑grid', 'Celluloid‑grain', 'Frame‑within‑frame', 'Multi‑stream', 'Crosscut‑narrative', 'Graphic‑visuals', 'Minimal‑dialogue', 'Pulpy', 'Retro‑thriller', 'Postmodern', 'Reflexive', 'Time‑loop', 'Fractured', 'Ethereal‑voice', 'Blue‑tone', 'Y2K', 'Digital‑vapor', 'Organic‑textured', 'Hazy‑memory', 'Memory‑lane', 'Found‑footage', 'Subversive', 'Ubiquitous‑voice‑over', 'Broken‑rhythm', 'Slow‑reveal', 'Wham‑ending', 'Hallucinatory', 'Mythic‑retelling', 'Steely‑focus', 'Warm‑glow', 'Romanticized', 'Worn‑tape', 'Neon‑glare', 'Pensive', 'Sparkling', 'Holographic', 'Earthy', 'Cloudy‑gaze', 'Bleak‑beauty', 'Elusive', 'Gestural', 'Submerged‑silence', 'Cross‑genre', 'Hyper‑realist‑dialogue', 'Sensual', 'Storybook', 'Riveting', 'Flickering', 'Dystopic‑glow', 'Cerebral‑thriller', 'Quicksilver', 'Sonic‑pulse', 'Underbelly', 'Blu‑film', 'Macro‑detail', 'Micro‑cinema', 'Macro‑cinema', 'Lifeline', 'Edge‑of‑your‑seat', 'Barebones', 'Black‑comedy', 'Sombre‑poetry', 'Neon‑pulse', 'Grit‑noir', 'Velvet', 'Super‑natural undertone']
+        };
+        const sceneOptions = {
+            sceneAction: ["A tense standoff", "A heartfelt confession", "A narrow escape from danger", "An unexpected, quiet discovery", "A silent observation from afar", "A secret being whispered between two people", "A chase through a crowded space", "An object of importance being lost", "An object of importance being found", "A moment of sudden, shocking violence", "A quiet, shared meal under stress", "Receiving devastating news", "A difficult goodbye", "An argument that changes everything", "A moment of pure, unexpected joy", "A shocking betrayal", "A last-minute rescue", "An emotional breakdown", "A painful memory resurfacing", "A sudden twist of fate", "A deep, uncomfortable silence", "A false sense of security", "A confrontation with a long-lost rival", "A surprise reveal", "An unspoken bond between strangers", "An unexpected visitor", "A desperate plea for help", "A quiet reconciliation", "An intense showdown", "A silent agreement", "A moment of clarity", "A sudden disappearance", "A race against time", "An old enemy resurfaces", "A carefully crafted lie being exposed", "A shocking act of kindness", "A romantic gesture gone wrong", "A near-death experience", "A quick thinking escape", "A moral dilemma", "An unexpected team-up", "A stolen moment of peace", "A decision that will change everything", "A misunderstood action leading to conflict", "A cryptic message", "A person from the past reappearing", "An attempt at forgiveness", "An impromptu celebration", "A life-changing choice", "A sudden change of heart", "A close call", "An unexpected ally", "A struggle for control", "A heartfelt apology", "A single, meaningful gesture", "A battle of wits", "A moment of clarity under pressure", "A piece of important information revealed", "A moment of extreme vulnerability", "A surprising act of bravery", "An impossible decision", "A countdown to disaster", "A dangerous risk taken", "A secret kept for far too long", "A plan falling apart", "A broken promise", "A haunting memory", "A moment of peace amidst chaos", "A dangerous temptation", "An attempt to outrun the past", "A sudden confession of love", "A moment of realization", "A betrayal from the inside", "A slow, tense build-up", "A moment of intense focus", "A heart-stopping encounter", "A misplaced trust", "A shocking coincidence", "A time when everything goes wrong", "A deep, lingering fear", "A desperate decision", "A moment of overwhelming guilt", "A failed escape", "An intense internal struggle", "A quiet act of defiance", "A looming threat", "A final showdown", "A plan gone awry", "A glimmer of hope in dark times", "A deadly mistake", "An emotional reunion", "A catastrophic failure", "A split-second decision", "A series of events that change everything", "A whispered secret", "A battle for survival", "A sudden, unexplained attack", "A fight for the truth", "A quest for redemption", "A life-altering choice", "A hidden agenda exposed", "A defining moment", "An unexpected obstacle", "A heart-pounding chase", "A moment of powerful silence", "A risky move", "A bitter farewell", "A quiet reflection on the past", "An emotional reckoning", "A final attempt to make things right", "A lingering presence", "A decisive battle", "A critical piece of the puzzle", "A dangerous revelation", "A heavy decision", "A fleeting moment of peace", "A painful realization", "A race to the finish", "A sudden surge of courage", "A life-saving act of kindness", "A bitter confrontation", "A sense of impending doom", "A final word of wisdom", "A dramatic change in circumstances", "A deadly encounter", "A chance meeting that changes everything", "A twist in the plot", "A dramatic escape", "A sudden change of plans", "A shocking loss", "A moment of reckless abandon", "A bittersweet goodbye", "A sudden outburst", "A surprising shift in power", "A test of loyalty", "A deep, life-altering discovery", "A pivotal turning point", "A moment of self-realization"],
+            sceneLocation: ["rain-slicked alley at midnight", "crowded market at dusk", "abandoned, creaking carnival", "sterile, white laboratory", "backseat of a moving car", "inside a dusty, forgotten attic", "on a windswept, lonely cliffside", "beneath the flickering lights of a subway car", "in a chaotic kitchen during dinner service", "empty, echoing art gallery", "cramped submarine corridor", "lush, overgrown greenhouse", "noisy, smoke-filled casino", "silent, ancient library", "hospital waiting room", "rooftop overlooking a neon-lit city", "dark, abandoned warehouse", "quiet park at dawn", "dimly lit bar in a back alley", "overstuffed bookshop", "foggy pier at sunrise", "cramped, cluttered office", "well-lit stage during a live performance", "shadowy alleyway with flickering street lamps", "small, deserted town square", "empty, frozen street on a winter night", "hidden speakeasy", "lavish ballroom", "dusty, forgotten museum", "crowded train station at rush hour", "deserted beach at sunset", "high-tech, futuristic control room", "cozy, dimly lit cafe", "underground bunker", "dirty, crowded hospital emergency room", "moonlit desert", "graffiti-covered underpass", "sleek, modern penthouse", "ancient, crumbling castle", "rundown motel on the outskirts of town", "serene, sun-dappled forest glade", "dark, stormy coastline", "dusty road through an abandoned ghost town", "run-down, neon-lit strip club", "luxurious hotel suite", "grimy, rundown alley behind a restaurant", "empty rooftop garden", "candlelit chapel", "desolate, post-apocalyptic wasteland", "quiet mountain cabin", "sprawling, overgrown backyard", "lively, bustling food truck park", "giant, silent movie theater", "high-security prison yard", "hidden cave deep in the woods", "neon-lit arcade", "small, cramped bathroom in a cheap motel", "dark, mysterious forest at night", "tiny, cluttered pawn shop", "rundown apartment building lobby", "busy city street during a parade", "wet, slippery bridge in the rain", "remote, snow-covered cabin", "abandoned, decaying hospital ward", "busy city rooftop garden", "dark, crowded nightclub", "quiet, peaceful mountain overlook", "rundown, dusty carnival ride", "quaint, rustic farmhouse", "labyrinthine, ancient catacomb", "eerie, quiet cemetery", "majestic, sunlit mountain pass", "dimly lit backroom poker table", "secret underground lair", "chaotic, cluttered kitchen during a dinner rush", "dark, shadow-filled hallway", "small-town diner at midnight", "narrow, winding mountain trail", "busy street corner in the rain", "cozy, fireside living room", "crowded, buzzing nightclub", "deserted, overgrown mansion", "small, intimate theater", "bright, modern co-working space", "darkened, abandoned factory", "hidden, overgrown garden", "grand, empty staircase", "glowing, high-tech lab", "large, buzzing airport terminal", "lonely, desolate street in a small town", "packed sports stadium", "flickering, dimly lit motel sign", "vast, empty parking lot", "cluttered antique shop", "small, unassuming tattoo parlor", "bright, sterile hospital room", "moonlit hilltop", "remote, isolated lighthouse", "high-speed chase through narrow city streets", "haunted mansion", "quiet, abandoned church", "crumbling bridge over a roaring river", "small, quiet lake at dawn", "bustling, noisy carnival", "dark, mysterious cave", "pristine, untouched snowfield", "crowded, noisy festival", "tranquil, hidden beach cove", "well-worn train compartment", "upscale, posh restaurant", "tiny, cluttered apartment", "cool, foggy forest path", "luxurious, overstuffed armchair in a study", "mountain peak at sunrise", "chaotic police precinct", "glass-walled observation deck", "well-tended, private garden", "fast-moving river in the middle of nowhere"],
+            sceneMood: ["Ominous and foreboding", "Chaotic and frantic", "Quiet and intimate", "Surreal and dreamlike", "Nostalgic and bittersweet", "Tense and suffocating", "Joyful and cathartic", "Melancholy and reflective", "Disorienting and confusing", "Cold and clinical", "Hopeful and warm", "Suspenseful and edgy", "Magical and wondrous", "Gritty and raw", "Euphoric and liberating", "Tense and unpredictable", "Mournful and haunting", "Angsty and rebellious", "Dark and tragic", "Light-hearted and fun", "Romantic and passionate", "Serene and peaceful", "Innocent and carefree", "Playful and mischievous", "Eerie and unsettling", "Warm and comforting", "Unnerving and tense", "Lonely and desolate", "Joyous and uplifting", "Romantic and nostalgic", "Anguished and heart-wrenching", "Anticipatory and excited", "Tragic and sorrowful", "Cynical and disillusioned", "Wild and untamed", "Unpredictable and wild", "Overwhelming and intense", "Dreamy and whimsical", "Stoic and detached", "Mysterious and intriguing", "Tense and full of suspense", "Calm and composed", "Darkly comic and absurd", "Bitter and regretful", "Frantic and desperate", "Exhilarating and triumphant", "Unsettling and strange", "Hopeful and uncertain", "Cold and distant", "Bittersweet and melancholy", "Raw and honest", "Desperate and hopeless", "Frantic and reckless", "Grave and serious", "Frenzied and disorienting", "Anticlimactic and disappointing", "Vivid and colorful", "Pensive and thoughtful", "Hollow and empty", "Introspective and deep", "Adventurous and bold", "Intimate and passionate", "Frightening and terrifying", "Heavy and oppressive", "Exhausted and drained", "Clever and sharp", "Gloomy and oppressive", "Tense but hopeful", "Shocking and unexpected", "Futuristic and surreal", "Reflective and meditative", "Intense and electrifying", "Lonely and introspective", "Enigmatic and cryptic", "Charming and delightful", "Serene and tranquil", "Creepy and spine-chilling", "Frenetic and charged", "Mournful and solemn", "Vibrant and full of life", "Hyperreal and exaggerated", "Solitary and detached", "Uneasy and anxious", "Curious and exploratory", "Suspicious and paranoid", "Turbulent and conflicted", "Peaceful and idyllic", "Vulnerable and exposed", "Exciting and unpredictable", "Rebellious and defiant", "Warm and tender", "Comforting and safe", "Shocking and emotional", "Playful and carefree", "Free-spirited and wild", "Determined and focused", "Bitter and vengeful", "Sensual and alluring", "Cold and unforgiving", "Harrowing and painful", "Gentle and soothing", "Triumphant and victorious", "Intense and urgent", "Mystical and otherworldly", "Horrific and gruesome", "Cheerful and radiant", "Romantic and tragic", "Nostalgic and wistful", "Tense and confrontational", "Apocalyptic and bleak", "Dramatic and tense", "Surreal and unsettling", "Heartwarming and sincere", "Anticipatory and tense", "Suffocating and claustrophobic", "Strange and foreign", "Overjoyed and exuberant", "Timeless and classic", "Exhausting and draining", "Lively and animated", "Paranoid and delusional", "Dreamlike and eerie", "Adrenaline-fueled and fast-paced", "Light and breezy", "Relentless and harsh", "Cold and calculating", "Vengeful and bitter", "Chaotic but thrilling", "Surreal and unsettling", "Dangerous and provocative"]
+        };
+
+        let appState = { projects: [], currentProjectId: null };
+        const DOM = {
+            appContainer: document.getElementById('app-container'),
+            openingAnimation: document.getElementById('opening-animation'),
+            projectsView: document.getElementById('projects-view'),
+            editorView: document.getElementById('editor-view'),
+            projectsList: document.getElementById('projects-list'),
+            plusButton: document.getElementById('plus-button'),
+            plusMenu: document.getElementById('plus-menu'),
+            modalContainer: document.getElementById('modal-container'),
+            projectTitleDisplay: document.getElementById('project-title-display'),
+            writingArea: document.getElementById('writing-area'),
+            ideasContainer: document.getElementById('ideas-container'),
+            editorToolbar: document.getElementById('editor-toolbar'),
+            copyAllBtn: document.getElementById('copy-all-btn'),
+            backToProjectsBtn: document.getElementById('back-to-projects'),
+        };
+
+        const DB = {
+            save: () => {
+                if (appState.currentProjectId) {
+                    const project = appState.projects.find(p => p.id === appState.currentProjectId);
+                    if (project) project.content = DOM.writingArea.innerHTML;
+                }
+                localStorage.setItem('filmideagenerator_appState', JSON.stringify(appState));
+            },
+            load: () => {
+                const savedState = localStorage.getItem('filmideagenerator_appState');
+                if (savedState) appState = JSON.parse(savedState);
+            }
+        };
+
+        function renderProjects() {
+            DOM.projectsList.innerHTML = '';
+            if (appState.projects.length === 0) {
+                DOM.projectsList.innerHTML = `<p class="text-gray-400 text-center col-span-full">No projects yet. Click the '+' button to create one!</p>`;
+                return;
+            }
+            appState.projects.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'project-card p-6 rounded-lg cursor-pointer flex flex-col justify-between';
+                card.dataset.id = project.id;
+                card.innerHTML = `
+                    <div>
+                        <h3 class="text-xl font-bold text-yellow-400 truncate">${project.name}</h3>
+                        <p class="text-sm text-gray-400">Last updated: ${new Date(project.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button class="rename-project-btn text-gray-400 hover:text-white" data-id="${project.id}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-project-btn text-gray-400 hover:text-red-500" data-id="${project.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                DOM.projectsList.appendChild(card);
+            });
+        }
+
+        function renderEditor() {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            if (!project) { switchView('projects'); return; }
+            DOM.projectTitleDisplay.textContent = project.name;
+            DOM.writingArea.innerHTML = project.content || '';
+            renderIdeas();
+        }
+
+        function renderIdeas() {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            if (!project) return;
+            DOM.ideasContainer.innerHTML = '';
+            project.ideas.forEach(idea => {
+                const ideaCard = document.createElement('div');
+                ideaCard.className = 'idea-card p-4 rounded-lg mb-4';
+                ideaCard.dataset.id = idea.id;
+                // Add data-type to the idea card for easier access to the idea's type
+                ideaCard.dataset.type = idea.type;
+                ideaCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <input type="text" value="${idea.name}" class="idea-name-input bg-transparent text-xl font-bold border-b-2 border-transparent focus:border-yellow-400 outline-none w-full mr-4" data-id="${idea.id}">
+                        <button class="delete-idea-btn text-gray-400 hover:text-red-500" data-id="${idea.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <p class="text-gray-300 mb-4">${idea.text}</p>
+                    <div class="flex gap-2 flex-wrap">
+                        <button class="idea-action-btn" data-action="retry" data-id="${idea.id}">Retry</button>
+                        <button class="idea-action-btn" data-action="new" data-id="${idea.id}">New</button>
+                        <button class="idea-action-btn" data-action="copy" data-id="${idea.id}">Copy</button>
+                    </div>
+                    <footer class="text-right mt-2"><p class="text-white text-xs">Developed by Faruk Arda Yegenoglu</p></footer>
+                `;
+                DOM.ideasContainer.appendChild(ideaCard);
+            });
+        }
+
+        function switchView(view) {
+            if (view === 'editor') {
+                DOM.projectsView.classList.add('hidden');
+                DOM.editorView.classList.remove('hidden');
+                DOM.plusButton.classList.add('project-view');
+            } else {
+                DB.save();
+                DOM.editorView.classList.add('hidden');
+                DOM.projectsView.classList.remove('hidden');
+                DOM.plusButton.classList.remove('project-view');
+                DOM.plusMenu.classList.add('hidden');
+                appState.currentProjectId = null;
+            }
+        }
+
+        function createProject(name) {
+            const newProject = {
+                id: Date.now().toString(), name,
+                content: `<p>Start writing your project notes for "${name}" here...</p>`,
+                ideas: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            };
+            appState.projects.push(newProject);
+            DB.save(); renderProjects();
+        }
+
+        function openProject(id) {
+            appState.currentProjectId = id;
+            switchView('editor');
+            renderEditor();
+        }
+
+        function renameProject(id, newName) {
+            const project = appState.projects.find(p => p.id === id);
+            if (project) {
+                project.name = newName;
+                project.updatedAt = new Date().toISOString();
+                DB.save();
+                if (id === appState.currentProjectId) DOM.projectTitleDisplay.textContent = newName;
+                renderProjects();
+            }
+        }
+
+        function deleteProject(id) {
+            appState.projects = appState.projects.filter(p => p.id !== id);
+            DB.save();
+            renderProjects();
+        }
+
+        // Modified to accept rawSelections
+        function createIdea(type, rawSelections) {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            if (!project) return;
+            
+            // Resolve selections for initial display, keeping rawSelections for retry logic
+            const resolvedSelections = {};
+            const options = type === 'film' ? filmOptions : sceneOptions;
+            for (const key in rawSelections) {
+                resolvedSelections[key] = rawSelections[key] || getRandomElement(options[key]);
+            }
+
+            const ideaText = generateIdeaText(type, resolvedSelections); // Generate text from resolved selections
+            const newIdea = {
+                id: Date.now().toString(),
+                name: `${type.charAt(0).toUpperCase() + type.slice(1)} Idea #${project.ideas.length + 1}`,
+                type,
+                text: ideaText,
+                rawSelections: rawSelections // Store the raw selections for retry logic
+            };
+            project.ideas.push(newIdea);
+            project.updatedAt = new Date().toISOString();
+            DB.save(); renderIdeas();
+        }
+        
+        // Modified to use rawSelections for re-randomization
+        function regenerateIdea(ideaId, ideaType) {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            const idea = project?.ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            const options = ideaType === 'film' ? filmOptions : sceneOptions;
+            const currentSelectionsForTextGeneration = {}; // This will hold the values for generating the text
+
+            // Iterate through the original rawSelections to determine what to keep and what to re-randomize
+            for (const key in idea.rawSelections) {
+                if (idea.rawSelections[key]) {
+                    // If there was a user selection, keep it for text generation
+                    currentSelectionsForTextGeneration[key] = idea.rawSelections[key];
+                } else {
+                    // If it was originally random (empty in rawSelections), get a new random element
+                    currentSelectionsForTextGeneration[key] = getRandomElement(options[key]);
+                }
+            }
+            
+            // Update the idea's text with the newly generated selections.
+            // Crucially, idea.rawSelections is NOT modified here, preserving the original intent.
+            idea.text = generateIdeaText(ideaType, currentSelectionsForTextGeneration);
+            
+            project.updatedAt = new Date().toISOString();
+            DB.save();
+            renderIdeas();
+        }
+
+        // Modified to use rawSelections for 'new' action
+        function updateIdea(ideaId, action) {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            const idea = project?.ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            // The 'retry' action is now handled by regenerateIdea directly
+            if (action === 'copy') {
+                navigator.clipboard.writeText(idea.text).then(() => { /* Custom alert/modal for success */ });
+                return;
+            }
+            
+            let newRawSelections = {}; // This will be the new rawSelections for the 'new' action
+            if (action === 'new') {
+                const options = idea.type === 'film' ? filmOptions : sceneOptions;
+                Object.keys(options).forEach(key => {
+                    newRawSelections[key] = ""; // Set all to blank to indicate new random
+                });
+            } else {
+                // For any other action (though currently only 'copy' is handled here besides 'new'),
+                // we'd typically want to preserve the existing raw selections.
+                // However, based on the current functionality, 'new' is the only other action that modifies selections.
+                newRawSelections = { ...idea.rawSelections }; // Fallback to existing if not 'new'
+            }
+            
+            // Resolve the new raw selections to get the actual text
+            const newResolvedSelections = {};
+            const options = idea.type === 'film' ? filmOptions : sceneOptions;
+            for (const key in newRawSelections) {
+                newResolvedSelections[key] = newRawSelections[key] || getRandomElement(options[key]);
+            }
+
+            idea.text = generateIdeaText(idea.type, newResolvedSelections);
+            idea.rawSelections = newRawSelections; // Store the updated raw selections (all empty for 'new')
+            project.updatedAt = new Date().toISOString();
+            DB.save();
+            renderIdeas();
+        }
+        
+        function renameIdea(ideaId, newName) {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            const idea = project?.ideas.find(i => i.id === ideaId);
+            if (idea) {
+                idea.name = newName;
+                DB.save();
+            }
+        }
+
+        function deleteIdea(ideaId) {
+            const project = appState.projects.find(p => p.id === appState.currentProjectId);
+            if (project) {
+                project.ideas = project.ideas.filter(i => i.id !== ideaId);
+                project.updatedAt = new Date().toISOString();
+                DB.save();
+                renderIdeas();
+            }
+        }
+
+        function generateIdeaText(type, selections) {
+            if (type === 'film') {
+                const vowels = 'aeiouAEIOU';
+                const article = vowels.includes(selections.genre[0]) ? 'An' : 'A';
+                return `${article} ${selections.genre.toLowerCase()} film about ${selections.protagonist.toLowerCase()}, who is ${selections.plot.toLowerCase()}, and confront ${selections.antagonist.toLowerCase()} in ${selections.setting.toLowerCase()}, with a ${selections.feel.toLowerCase().replace(/‑/g, '-')} feel.`;
+            } else { // scene
+                return `A ${selections.sceneMood.toLowerCase()} scene depicting: ${selections.sceneAction.toLowerCase()} in a ${selections.sceneLocation.toLowerCase()}.`;
+            }
+        }
+
+        function showModal(content, onOpen = () => {}) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-backdrop';
+            modal.innerHTML = `<div class="modal-content">${content}</div>`;
+            DOM.modalContainer.appendChild(modal);
+            modal.querySelector('.close-modal-btn')?.addEventListener('click', () => modal.remove());
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+            onOpen(modal);
+            return modal;
+        }
+
+        function showNewProjectModal() {
+            showModal(`
+                <h3 class="text-2xl font-bold mb-4">Create New Project</h3>
+                <input type="text" id="new-project-name" class="w-full p-2 rounded bg-gray-800 border border-gray-600 mb-4" placeholder="Project Name">
+                <div class="flex justify-end gap-2">
+                    <button class="close-modal-btn py-2 px-4 bg-gray-600 rounded">Cancel</button>
+                    <button id="confirm-create-project" class="py-2 px-4 bg-red-700 rounded">Create</button>
+                </div>
+            `, modal => {
+                const input = modal.querySelector('#new-project-name');
+                input.focus();
+                modal.querySelector('#confirm-create-project').addEventListener('click', () => {
+                    if (input.value.trim()) { createProject(input.value.trim()); modal.remove(); }
+                });
+            });
+        }
+        
+        function showRenameProjectModal(id, currentName) {
+            showModal(`
+                <h3 class="text-2xl font-bold mb-4">Rename Project</h3>
+                <input type="text" id="rename-project-name" class="w-full p-2 rounded bg-gray-800 border border-gray-600 mb-4" value="${currentName}">
+                <div class="flex justify-end gap-2">
+                    <button class="close-modal-btn py-2 px-4 bg-gray-600 rounded">Cancel</button>
+                    <button id="confirm-rename-project" class="py-2 px-4 bg-yellow-600 rounded">Rename</button>
+                </div>
+            `, modal => {
+                const input = modal.querySelector('#rename-project-name');
+                input.focus();
+                modal.querySelector('#confirm-rename-project').addEventListener('click', () => {
+                    if (input.value.trim()) { renameProject(id, input.value.trim()); modal.remove(); }
+                });
+            });
+        }
+        
+        function showDeleteConfirmationModal(message, onConfirm) {
+            showModal(`
+                <h3 class="text-xl font-bold mb-4">Are you sure?</h3>
+                <p class="text-gray-400 mb-6">${message}</p>
+                <div class="flex justify-end gap-2">
+                    <button class="close-modal-btn py-2 px-4 bg-gray-600 rounded">Cancel</button>
+                    <button id="confirm-delete" class="py-2 px-4 bg-red-700 rounded">Delete</button>
+                </div>
+            `, modal => {
+                modal.querySelector('#confirm-delete').addEventListener('click', () => {
+                    onConfirm();
+                    modal.remove();
+                });
+            });
+        }
+
+        function showIdeaGeneratorModal(type) {
+            const options = type === 'film' ? filmOptions : sceneOptions;
+            const title = type === 'film' ? 'Film Idea Generator' : 'Scene Idea Generator';
+            let fieldsHTML = '';
+            Object.entries(options).forEach(([key, values]) => {
+                const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                fieldsHTML += `
+                    <div class="mb-4">
+                        <label class="block mb-1 text-sm font-medium text-gray-300">${label}</label>
+                        <div class="dropdown-wrapper" data-key="${key}">
+                            <input type="text" class="dropdown-input" placeholder="Type or select an option...">
+                            <div class="dropdown-content">
+                                ${values.map(v => `<a data-value="${v}">${v}</a>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            showModal(`
+                <h3 class="text-2xl font-bold mb-6">${title}</h3>
+                <div class="max-h-[60vh] overflow-y-auto pr-2">${fieldsHTML}</div>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button class="close-modal-btn py-2 px-4 bg-gray-600 rounded">Cancel</button>
+                    <button id="confirm-generate-idea" class="py-2 px-4 bg-yellow-600 rounded">Generate</button>
+                </div>
+                <footer class="text-center mt-4"><p class="text-white text-xs">Developed by Faruk Arda Yegenoglu</p></footer>
+            `, modal => {
+                modal.querySelectorAll('.dropdown-wrapper').forEach(wrapper => {
+                    const input = wrapper.querySelector('.dropdown-input');
+                    const content = wrapper.querySelector('.dropdown-content');
+                    const links = content.querySelectorAll('a');
+                    input.addEventListener('focus', () => content.style.display = 'block');
+                    input.addEventListener('blur', () => setTimeout(() => content.style.display = 'none', 150));
+                    input.addEventListener('input', () => {
+                        const filter = input.value.toLowerCase();
+                        links.forEach(link => {
+                            link.style.display = link.textContent.toLowerCase().includes(filter) ? '' : 'block';
+                        });
+                    });
+                    links.forEach(link => {
+                        link.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            input.value = link.dataset.value;
+                            content.style.display = 'none';
+                        });
+                    });
+                });
+
+                modal.querySelector('#confirm-generate-idea').addEventListener('click', () => {
+                    const rawSelections = {}; // This will store what the user actually typed or ""
+                    modal.querySelectorAll('.dropdown-wrapper').forEach(wrapper => {
+                        const key = wrapper.dataset.key;
+                        const input = wrapper.querySelector('.dropdown-input');
+                        rawSelections[key] = input.value.trim(); // Store the raw input, or empty string if blank
+                    });
+                    createIdea(type, rawSelections); // Pass rawSelections
+                    modal.remove();
+                });
+            });
+        }
+        
+        function getRandomElement(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function init() {
+            setTimeout(() => {
+                DOM.openingAnimation.classList.add('fade-out');
+                setTimeout(() => {
+                    DOM.openingAnimation.style.display = 'none';
+                    DOM.appContainer.style.display = 'block';
+                }, 1000);
+            }, 3000);
+
+            DB.load();
+            renderProjects();
+            switchView('projects');
+
+            DOM.plusButton.addEventListener('click', () => {
+                if (appState.currentProjectId) {
+                    DOM.plusMenu.classList.toggle('hidden');
+                } else {
+                    showNewProjectModal();
+                }
+            });
+
+            DOM.plusMenu.addEventListener('click', e => {
+                if (e.target.matches('[data-action]')) {
+                    showIdeaGeneratorModal(e.target.dataset.action);
+                    DOM.plusMenu.classList.add('hidden');
+                }
+            });
+
+            DOM.backToProjectsBtn.addEventListener('click', () => switchView('projects'));
+            
+            DOM.projectsList.addEventListener('click', e => {
+                const renameBtn = e.target.closest('.rename-project-btn');
+                const deleteBtn = e.target.closest('.delete-project-btn');
+                const card = e.target.closest('.project-card');
+
+                if (renameBtn) {
+                    const id = renameBtn.dataset.id;
+                    const project = appState.projects.find(p => p.id === id);
+                    showRenameProjectModal(id, project.name);
+                } else if (deleteBtn) {
+                    const id = deleteBtn.dataset.id;
+                    const project = appState.projects.find(p => p.id === id);
+                    showDeleteConfirmationModal(`This will permanently delete the project "${project.name}".`, () => deleteProject(id));
+                } else if (card) {
+                    openProject(card.dataset.id);
+                }
+            });
+            
+            // Existing click listener for toolbar buttons and inputs
+            DOM.editorToolbar.addEventListener('click', e => {
+                const target = e.target.closest('button, input');
+                if (!target) return;
+
+                const command = target.dataset.command;
+                const value = target.value || null;
+
+                // Only execute command for buttons and color inputs on click
+                if (command && target.tagName !== 'SELECT') { // Exclude select elements from click-based execCommand
+                    document.execCommand(command, false, value);
+                }
+                // Do not focus writing area if a select element was clicked, to allow dropdown to stay open
+                if (target.tagName !== 'SELECT') {
+                    DOM.writingArea.focus();
+                }
+            });
+
+            // New change listener specifically for the font size select
+            const fontSizeSelect = DOM.editorToolbar.querySelector('select[data-command="fontSize"]');
+            if (fontSizeSelect) {
+                fontSizeSelect.addEventListener('change', () => {
+                    const command = fontSizeSelect.dataset.command;
+                    const value = fontSizeSelect.value;
+                    if (command) {
+                        document.execCommand(command, false, value);
+                    }
+                    DOM.writingArea.focus(); // Focus after selection is made
+                });
+            }
+
+            DOM.copyAllBtn.addEventListener('click', () => {
+                // Changed alert to a custom modal for better UX
+                showModal(`<h3 class="text-xl font-bold mb-4">Copied!</h3><p class="text-gray-400">Writing content copied to clipboard!</p><div class="flex justify-end mt-4"><button class="close-modal-btn py-2 px-4 bg-gray-600 rounded">OK</button></div>`);
+                navigator.clipboard.writeText(DOM.writingArea.innerText)
+                    .catch(err => console.error('Failed to copy text: ', err));
+            });
+            
+            DOM.ideasContainer.addEventListener('click', e => {
+                const deleteBtn = e.target.closest('.delete-idea-btn');
+                const actionBtn = e.target.closest('.idea-action-btn');
+                if (deleteBtn) {
+                    showDeleteConfirmationModal('This will delete the idea card.', () => deleteIdea(deleteBtn.dataset.id));
+                } else if (actionBtn) {
+                    // Check if the action is 'retry'
+                    if (actionBtn.dataset.action === 'retry') {
+                        const ideaCard = e.target.closest('.idea-card');
+                        const ideaType = ideaCard.dataset.type; // Get the type from the idea card
+                        regenerateIdea(actionBtn.dataset.id, ideaType);
+                    } else {
+                        // Handle other actions like 'new' or 'copy'
+                        updateIdea(actionBtn.dataset.id, actionBtn.dataset.action);
+                    }
+                }
+            });
+            
+            DOM.ideasContainer.addEventListener('change', e => {
+                if (e.target.matches('.idea-name-input')) {
+                    renameIdea(e.target.dataset.id, e.target.value);
+                }
+            });
+
+            window.addEventListener('beforeunload', DB.save);
+        }
+
+        init();
+    </script>
+</body>
+</html>

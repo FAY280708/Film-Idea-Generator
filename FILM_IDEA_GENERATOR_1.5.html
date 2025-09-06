@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film & Scene Idea Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+        }
+        .gold-border {
+            border: 2px solid #DAA520;
+        }
+        .main-container {
+            background-color: #1a1a1a;
+            border: 2px solid #4B0000; /* Darkish Red Border */
+        }
+        .control-panel {
+            background-color: #242424;
+            border-bottom: 2px solid #DAA520;
+        }
+        .btn {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #DAA520;
+            transition: all 0.3s ease;
+        }
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.5);
+        }
+        .btn-primary {
+            background-color: #8B0000; /* Darkish Red */
+            color: #ffffff;
+            border-color: #DAA520;
+        }
+        .btn-primary:hover {
+            background-color: #A52A2A;
+        }
+        .btn-secondary {
+            background-color: #4a4a4a;
+        }
+        .btn-secondary:hover {
+            background-color: #6a6a6a;
+        }
+        .result-box {
+            background-color: #242424;
+            min-height: 100px;
+        }
+        .copy-success {
+            background-color: #DAA520;
+            color: #121212;
+        }
+
+        /* Styles for Searchable Dropdown */
+        .searchable-dropdown {
+            position: relative;
+        }
+        .dropdown-button {
+            width: 100%;
+            text-align: left;
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #DAA520;
+            padding: 0.625rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-button-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #242424;
+            border: 1px solid #DAA520;
+            width: 100%;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 4px;
+            border-radius: 0.375rem;
+        }
+        .dropdown-search {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: #333333;
+            color: white;
+            border: none;
+            border-bottom: 1px solid #DAA520;
+            outline: none;
+        }
+        .dropdown-options a {
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+        .dropdown-options a:hover {
+            background-color: #4a4a4a;
+        }
+    </style>
+</head>
+<body class="text-white">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-white" style="text-shadow: 2px 2px 4px #8B0000;">Film Idea Generator</h1>
+            <p class="text-gray-400 mt-2">Craft your next blockbuster. Make your selections or leave blank for a surprise.</p>
+        </header>
+
+        <main class="main-container rounded-lg shadow-2xl p-6 md:p-8 gold-border">
+            <div class="control-panel p-6 rounded-lg mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Genre</label>
+                        <div id="genre" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Protagonist</label>
+                        <div id="protagonist" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Antagonist</label>
+                        <div id="antagonist" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Story Is About</label>
+                        <div id="plot" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Setting</label>
+                        <div id="setting" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Feel</label>
+                        <div id="feel" class="searchable-dropdown"></div>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="generate-btn" class="btn btn-primary font-bold py-3 px-8 rounded-lg text-lg">
+                        Generate Film Idea
+                    </button>
+                </div>
+            </div>
+
+            <div id="result-container" class="hidden">
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">Your Film Idea</h2>
+                <div class="result-box gold-border rounded-lg p-6 flex items-center justify-center text-center">
+                    <p id="result-text" class="text-lg md:text-xl text-gray-200"></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="container mx-auto px-4 md:px-8 max-w-5xl mt-12">
+        <header class="text-center mb-8">
+            <h2 class="text-4xl md:text-5xl font-bold text-white" style="text-shadow: 2px 2px 4px #DAA520;">Scene Idea Generator</h2>
+            <p class="text-gray-400 mt-2">Find inspiration for a single shot or a pivotal moment.</p>
+        </header>
+
+        <main class="main-container rounded-lg shadow-2xl p-6 md:p-8 gold-border">
+            <div class="control-panel p-6 rounded-lg mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">What is happening in the scene?</label>
+                        <div id="sceneAction" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Location</label>
+                        <div id="sceneLocation" class="searchable-dropdown"></div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm font-medium text-gray-300">Mood</label>
+                        <div id="sceneMood" class="searchable-dropdown"></div>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="generate-scene-btn" class="btn btn-primary font-bold py-3 px-8 rounded-lg text-lg" style="background-color: #DAA520; border-color: #4B0000; color: #121212;">
+                        Generate Scene Idea
+                    </button>
+                </div>
+            </div>
+
+            <div id="scene-result-container" class="hidden">
+                <h2 class="text-2xl font-bold text-center mb-4 text-white">Your Scene Idea</h2>
+                <div class="result-box gold-border rounded-lg p-6 flex items-center justify-center text-center">
+                    <p id="scene-result-text" class="text-lg md:text-xl text-gray-200"></p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="text-center my-12">
+        <p class="text-gray-500 text-sm">Developed by Faruk Arda Yegenoglu</p>
+    </footer>
+
+
+    <script>
+    // --- DATA ---
+    const filmOptions = {
+        genre: ['Action', 'Superhero', 'Spy', 'Espionage', 'Martial Arts', 'Heist', 'Adventure', 'Quest', 'Survival', 'Exploration', 'Jungle', 'Space', 'Deep Sea', 'Comedy', 'Romantic Comedy', 'Dark Comedy', 'Slapstick', 'Satire', 'Parody', 'Drama', 'Historical Drama', 'Crime Drama', 'Family Drama', 'Legal Drama', 'Courtroom', 'Fantasy', 'High Fantasy', 'Urban Fantasy', 'Dark Fantasy', 'Magical Realism', 'Horror', 'Supernatural Horror', 'Slasher', 'Psychological Horror', 'Folk Horror', 'Creature Feature', 'Science Fiction', 'Sci-Fi', 'Cyberpunk', 'Post-Apocalyptic', 'Space Opera', 'Time Travel', 'Dystopian', 'Mystery', 'Thriller', 'Detective', 'Whodunit', 'Psychological Thriller', 'Tech Thriller', 'Conspiracy', 'Romance', 'Forbidden Love', 'Enemies to Lovers', 'Coming of Age Romance', 'Second-Chance Romance', 'Western', 'Classic Western', 'Revisionist Western', 'Neo-Western', 'Space Western', 'Sci-Fi Horror', 'Action Comedy', 'Fantasy Romance', 'Thriller Drama'],
+        protagonist: ['A runaway prince', 'A gifted but reckless scientist', 'A disillusioned detective', 'A reluctant chosen one', 'A single mother in a hostile town', 'A broke inventor chasing one last idea', 'A teenage hacker with a conscience', 'A cynical journalist on the edge', 'A blind musician discovering the truth', 'A shape-shifter hiding in plain sight', 'A war veteran haunted by visions', 'A shy librarian with a hidden talent', 'A forgotten god seeking redemption', 'A child who speaks to ghosts', 'A healer with a deadly curse', 'A robot developing emotions', 'A disgraced knight trying to restore honor', 'A time traveler stuck in a loop', 'A baker dreaming of revolution', 'A teenage queen in a crumbling kingdom', 'A ghost looking for peace', 'A criminal trying to do one good thing', 'A street magician with real powers', 'A janitor who knows too much', 'A clone with stolen memories'],
+        antagonist: ['A tyrannical king clinging to power', 'A manipulative cult leader', 'A former ally turned ruthless enemy', 'A sentient virus spreading unseen', 'A jealous sibling with a secret plan', 'A betrayed friend seeking revenge', 'A corrupt official covering up the truth', 'A god playing with mortal lives', 'A demon feeding on despair', 'A megacorporation exploiting the masses', 'A clone obsessed with replacing the original', 'A ghost stuck in vengeance', 'A corrupt AI rewriting reality', 'A time traveler altering history for gain', 'A rival who always stays one step ahead', 'A monster that mimics loved ones', 'A puppet master pulling every string', 'A ruler enforcing order through fear', 'A killer convinced they’re saving the world', 'A military regime erasing free thought', 'A cursed artifact corrupting minds', 'A forgotten deity demanding worship', 'A scientist experimenting on the innocent', 'A warlord rebuilding the world their way', 'A shadow government hiding in plain sight'],
+        plot: ['A person forced to face inner doubt while trying to escape their past', 'A person learning to rely on instinct while learning to trust others', 'A person pursuing a case no one believes in while solving the mystery only they believe is real', 'A person uncovering corruption they once served while fighting for justice in a corrupt system', 'A person realizing their past holds the key while discovering their real origins', 'A person facing visions they can\'t explain while haunted by an ancient prophecy', 'A person balancing duty and guilt while rebuilding trust after betrayal', 'A person questioning their creation while holding a discovery that could end the world', 'A person risking everything for closure while pulling off one last heist', 'A person leading others into danger while rising in a time of chaos', 'A person proving they\'re not broken while proving their worth', 'A person searching for survival and self while navigating a post-apocalyptic world', 'A person building trust in cell walls while planning a brilliant escape', 'A person finding lies in the lesson while uncovering a dangerous truth', 'A person exposing truths that echo back while exposing a massive conspiracy'],
+        setting: ['Ancient Egyptian marketplace', 'Victorian London street', 'Post-apocalyptic desert town', 'Cyberpunk neon city', 'Deep-space research station', 'Underwater biodome', 'Remote Arctic research outpost', 'Medieval European castle', 'Renaissance Italian palazzo', 'Feudal Japanese village', 'Alien jungle world', 'Fantasy floating island', 'Haunted New England manor', 'Prohibition-era speakeasy', '1960s American diner', 'Near-future Mars colony', 'Steampunk Victorian train', 'Urban rooftop garden', 'Suburban cul-de-sac', 'Nomadic desert caravan camp', 'Luxury cruise ship', 'Pirate-era Caribbean port', 'Rural Amish farm', 'Modern Silicon Valley startup office', '1960s Space Race rocket facility', 'World War II battlefield trench'],
+        feel: ['Dark', 'Light‑hearted', 'Fast‑paced', 'Slow‑burn', 'Whimsical', 'Melancholic', 'Gritty', 'Uplifting', 'Introspective', 'Surreal', 'Dreamlike', 'Realistic', 'Hyper‑real', 'Stylized', 'Raw', 'Atmospheric', 'Claustrophobic', 'Expansive', 'Mysterious', 'Satirical', 'Comedic', 'Bleak', 'Tense', 'Suspenseful', 'Romantic', 'Tragic', 'Hopeful', 'Edgy', 'Thought‑provoking', 'Nostalgic', 'Violent', 'Quiet', 'Loud', 'Chaotic', 'Minimalist', 'Lush', 'Dramatic', 'Poetic']
+    };
+
+    const sceneOptions = {
+        sceneAction: ["A tense standoff", "A heartfelt confession", "A narrow escape from danger", "An unexpected, quiet discovery", "A silent observation from afar", "A secret being whispered between two people", "A chase through a crowded space", "An object of importance being lost", "An object of importance being found", "A moment of sudden, shocking violence", "A quiet, shared meal under stress", "Receiving devastating news", "A difficult goodbye", "An argument that changes everything", "A moment of pure, unexpected joy"],
+        sceneLocation: ["A rain-slicked alley at midnight", "A crowded market at dusk", "An abandoned, creaking carnival", "A sterile, white laboratory", "The backseat of a moving car", "Inside a dusty, forgotten attic", "On a windswept, lonely cliffside", "Beneath the flickering lights of a subway car", "In a chaotic kitchen during dinner service", "An empty, echoing art gallery", "A cramped submarine corridor", "A lush, overgrown greenhouse", "A noisy, smoke-filled casino", "A silent, ancient library", "A hospital waiting room"],
+        sceneMood: ["Ominous and foreboding", "Chaotic and frantic", "Quiet and intimate", "Surreal and dreamlike", "Nostalgic and bittersweet", "Tense and suffocating", "Joyful and cathartic", "Melancholy and reflective", "Disorienting and confusing", "Cold and clinical", "Hopeful and warm", "Suspenseful and edgy", "Magical and wondrous", "Gritty and raw"]
+    };
+
+
+    // --- UTILITY FUNCTIONS ---
+    function getRandomElement(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // --- SEARCHABLE DROPDOWN LOGIC ---
+    function createSearchableDropdown(containerId, options, defaultText = 'Random') {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `
+            <button type="button" class="dropdown-button">
+                <span class="dropdown-button-text">${defaultText}</span>
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="dropdown-content">
+                <input type="text" class="dropdown-search" placeholder="Search...">
+                <div class="dropdown-options">
+                    <a data-value="">${defaultText}</a>
+                </div>
+            </div>
+        `;
+        container.setAttribute('data-value', '');
+
+        const optionsContainer = container.querySelector('.dropdown-options');
+        options.sort().forEach(option => {
+            const a = document.createElement('a');
+            a.textContent = option.replace(/‑/g, '-');
+            a.setAttribute('data-value', option);
+            optionsContainer.appendChild(a);
+        });
+
+        const button = container.querySelector('.dropdown-button');
+        const buttonText = container.querySelector('.dropdown-button-text');
+        const content = container.querySelector('.dropdown-content');
+        const searchInput = container.querySelector('.dropdown-search');
+        const optionLinks = optionsContainer.querySelectorAll('a');
+
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-content').forEach(c => {
+                if (c !== content) c.style.display = 'none';
+            });
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+            if (content.style.display === 'block') {
+                searchInput.focus();
+            }
+        });
+
+        searchInput.addEventListener('input', () => {
+            const filter = searchInput.value.toLowerCase();
+            optionLinks.forEach(link => {
+                const txtValue = link.textContent || link.innerText;
+                link.style.display = txtValue.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+            });
+        });
+
+        optionLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                const value = link.getAttribute('data-value');
+                const text = link.textContent;
+                container.setAttribute('data-value', value);
+                buttonText.textContent = text;
+                content.style.display = 'none';
+            });
+        });
+    }
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-content').forEach(c => c.style.display = 'none');
+    });
+
+
+    // --- FILM IDEA LOGIC ---
+    const filmResultContainer = document.getElementById('result-container');
+    const filmResultText = document.getElementById('result-text');
+
+    function generateFilmIdea() {
+        const selections = {};
+        for (const key in filmOptions) {
+            let selectedValue = document.getElementById(key).getAttribute('data-value');
+            if (!selectedValue) {
+                selectedValue = getRandomElement(filmOptions[key]);
+            }
+            selections[key] = selectedValue;
+        }
+        displayFilmIdea(selections);
+    }
+    
+    function displayFilmIdea(ideaParts) {
+        const vowels = 'aeiouAEIOU';
+        const genreArticle = vowels.includes(ideaParts.genre[0]) ? 'An' : 'A';
+        const formattedGenre = `${genreArticle} ${ideaParts.genre.toLowerCase()}`;
+        
+        let plotText = ideaParts.plot.toLowerCase();
+        if (plotText.startsWith('a person ')) {
+            plotText = plotText.substring(9);
+        }
+
+        const ideaString = `${formattedGenre} film about ${ideaParts.protagonist.toLowerCase()}, who is ${plotText}, and must confront ${ideaParts.antagonist.toLowerCase()} in ${ideaParts.setting.toLowerCase()}, with a ${ideaParts.feel.toLowerCase().replace(/‑/g, '-')} feel.`;
+        
+        filmResultText.textContent = ideaString;
+        filmResultContainer.classList.remove('hidden');
+    }
+
+    // --- SCENE IDEA LOGIC ---
+    const sceneResultContainer = document.getElementById('scene-result-container');
+    const sceneResultText = document.getElementById('scene-result-text');
+
+    function generateSceneIdea() {
+        const selections = {};
+        for (const key in sceneOptions) {
+            let selectedValue = document.getElementById(key).getAttribute('data-value');
+            if (!selectedValue) {
+                selectedValue = getRandomElement(sceneOptions[key]);
+            }
+            selections[key] = selectedValue;
+        }
+        displaySceneIdea(selections);
+    }
+
+    function displaySceneIdea(ideaParts) {
+        const ideaString = `A ${ideaParts.sceneMood.toLowerCase()} scene depicting: ${ideaParts.sceneAction.toLowerCase()} in a ${ideaParts.sceneLocation.toLowerCase()}.`;
+        sceneResultText.textContent = ideaString;
+        sceneResultContainer.classList.remove('hidden');
+    }
+
+    // --- INITIALIZATION ---
+    function initializeApp() {
+        // Populate film dropdowns
+        for (const key in filmOptions) {
+            createSearchableDropdown(key, filmOptions[key], 'Random');
+        }
+
+        // Populate scene dropdowns
+        for (const key in sceneOptions) {
+            createSearchableDropdown(key, sceneOptions[key], 'Random');
+        }
+        
+        // Add event listeners
+        document.getElementById('generate-btn').addEventListener('click', generateFilmIdea);
+        document.getElementById('generate-scene-btn').addEventListener('click', generateSceneIdea);
+    }
+
+    // Run the app
+    initializeApp();
+
+    </script>
+</body>
+</html>
