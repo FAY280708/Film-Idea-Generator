@@ -66,3 +66,5 @@ We welcome contributions! If you have suggestions for new features, improvements
 Faruk Arda Yegenoglu - wfay28@gmail.com
 
 Project Link: [https://github.com/FAY280708/film-idea-generator](https://github.com/FAY280708/film-idea-generator)
+
+Youtube: https://youtube.com/@UyanChannel
