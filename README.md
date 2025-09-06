@@ -63,6 +63,6 @@ We welcome contributions! If you have suggestions for new features, improvements
 
 ## 📞 Contact
 
-Wafaa Fay - wfay28@gmail.com
+Faruk AArda Yegenoglu - wfay28@gmail.com
 
 Project Link: [https://github.com/FAY280708/film-idea-generator](https://github.com/FAY280708/film-idea-generator)
