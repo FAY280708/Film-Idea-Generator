@@ -43,7 +43,7 @@ We welcome contributions! If you have suggestions for new features, improvements
 
 ## 📄 License
 
-Distributed under no licenses currently. See `LICENSE` for more information.
+Currently distributed under no licenses. See `LICENSE` for more information.
 
 ## 📞 Contact
 
