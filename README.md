@@ -61,10 +61,6 @@ We welcome contributions! If you have suggestions for new features, improvements
 4.  Push to the branch
 5.  Open a Pull Request
 
-## 📄 License
-
-Currently distributed under no licenses. See `LICENSE` for more information.
-
 ## 📞 Contact
 
 Wafaa Fay - wfay28@gmail.com
