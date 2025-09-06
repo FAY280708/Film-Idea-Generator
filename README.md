@@ -14,9 +14,10 @@ But we're not just about ideas. Once you find a concept you love, you can start 
 
 Your story is waiting. Let **Film Idea Generator** help you find it.
 
-## 👉 Download Here: 
-# [Film-Idea-Generator-APK](https://github.com/FAY280708/Film-Idea-Generator/blob/main/Film_Idea_Generator_2.0.apk)
-# [Film-Idea-Generator-HTML](https://github.com/FAY280708/Film-Idea-Generator/blob/main/FILM_IDEA_GENERATOR_2.0.html)
+## 👇 Download Here: 
+**[Film-Idea-Generator-APK](https://github.com/FAY280708/Film-Idea-Generator/blob/main/Film_Idea_Generator_2.0.apk)**
+
+**[Film-Idea-Generator-HTML](https://github.com/FAY280708/Film-Idea-Generator/blob/main/FILM_IDEA_GENERATOR_2.0.html)**
 
 ## ✨ Features
 
