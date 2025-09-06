@@ -1,7 +1,3 @@
-<div align="center">
-<img src="https://drive.google.com/u/0/drive-viewer/AKGpihYAhwmYFnrrhlsQMfwhpyw7yxWoKn-EgoJhprxakhpo-1O8IUZ3tqt7BjPrUrVJ-CZeOHsonQOxtByQVfdrpTUUd7eb_SDjyQ=s1600-rw-v1" alt="App Screenshot" />
-</div>
-
 # Film & Scene Idea Generator
 
 A powerful and elegant web application for writers, filmmakers, and creatives to spark inspiration and organize their ideas. This tool is built to help you overcome writer's block by generating unique and compelling film and scene concepts.
