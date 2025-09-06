@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://drive.google.com/file/d/1OB1QClQAZnPu1gRnGBx1rSL6y3Bqssx7" alt="App Screenshot" />
+<img src="https://drive.google.com/u/0/drive-viewer/AKGpihYAhwmYFnrrhlsQMfwhpyw7yxWoKn-EgoJhprxakhpo-1O8IUZ3tqt7BjPrUrVJ-CZeOHsonQOxtByQVfdrpTUUd7eb_SDjyQ=s1600-rw-v1" alt="App Screenshot" />
 </div>
 
 # Film & Scene Idea Generator
